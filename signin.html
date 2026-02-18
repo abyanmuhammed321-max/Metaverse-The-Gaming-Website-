@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metaverse Sign In</title>
+  
+  <!-- Load Google Sign-In library -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+  <!-- Set your Google Client ID here -->
+  <meta name="google-signin-client_id" content="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.apps.googleusercontent.com">
+  
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<div id="g_id_onload"
+     data-client_id="247484871783-94kv3q00lbpp1p5a9va9v492844ecac7.apps.googleusercontent.com"
+     data-login_uri="http://127.0.0.1:5500/signin.html/oauth2callback"
+     data-auto_prompt="false">
+</div>
+<div class="g_id_signin" data-type="standard"></div>
+
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .signin-container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      width: 380px;
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .signin-container img {
+      width: 90px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #202124;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #1669c1;
+    }
+    .links {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+    .links a {
+      color: #1a73e8;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+    .g-signin2 {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="signin-container">
+    <!-- Replace with your metaverse logo -->
+    <img src="virtual-reality.png" alt="Metaverse Logo">
+    <h2>Sign in to Metaverse</h2>
+
+    <!-- Custom email/password form -->
+    <form>
+      <input type="email" placeholder="Email or phone" required>
+      <input type="password" placeholder="Enter your password" required>
+      <button type="submit">Next</button>
+    </form>
+
+    <!-- Google Sign-In button -->
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+    <div class="links">
+      <a href="#">Forgot email?</a> • 
+      <a href="#">Create account</a>
+    </div>
+  </div>
+
+  <script>
+    function onSignIn(googleUser) {
+      var profile = googleUser.getBasicProfile();
+      console.log("Name: " + profile.getName());
+      console.log("Email: " + profile.getEmail());
+
+      // Send ID token to your backend for verification
+      var id_token = googleUser.getAuthResponse().id_token;
+      console.log("ID Token: " + id_token);
+    }
+  </script>
+</body>
+</html>

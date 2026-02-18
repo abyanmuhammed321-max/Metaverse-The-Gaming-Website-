@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metaverse | The Gaming Website</title>
+    <link rel="icon" href="virtual-reality.png">
+    <link rel="stylesheet" href="style.css">
+    <script>
+const cursor = document.querySelector(".cursor");
+document.addEventListener("mousemove", e=>{
+    cursor.style.left = e.clientX + "px";
+    cursor.style.top = e.clientY + "px";
+});
+</script>
+    
+     <style>
+             .images {
+            width: 8cm;
+            height: 4cm;
+            margin-left: 50px;
+            border-radius: 10%;
+        }
+        .images:hover {
+            color: blue;
+            background: blue;
+            box-shadow: 0 0 100px lightblue;
+        }
+      
+      .gfg{
+    width:420px;
+    border-radius:20px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:10px;
+    transition:0.5s;
+    box-shadow:0 0 30px rgba(0,255,255,0.2);
+}
+
+.gfg:hover{
+    transform: scale(1.1) rotateY(15deg);
+    box-shadow:0 0 80px #00f7ff;
+}
+
+     </style>
+   <script>
+const canvas = document.getElementById("galaxy");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let stars = [];
+
+for(let i=0;i<150;i++){
+    stars.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        radius: Math.random()*2,
+        speed: Math.random()*0.5
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle="white";
+    stars.forEach(star=>{
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius,0,Math.PI*2);
+        ctx.fill();
+
+        star.y += star.speed;
+        if(star.y > canvas.height){
+            star.y = 0;
+        }
+    });
+
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+  
+</head>
+<body>
+    <audio id="bgSound" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6f5e9b44a5.mp3?filename=space-ambient-110624.mp3" type="audio/mpeg">
+</audio>
+
+
+
+<script>
+const sound = document.getElementById("bgSound");
+
+function toggleSound(){
+    if(sound.paused){
+        sound.play();
+    }else{
+        sound.pause();
+    }
+}
+</script>
+
+    <div class="cursor"></div>
+
+    <canvas id="galaxy"></canvas>
+
+    <div class="layer-blur"></div>
+
+    <div class="container">    
+<header>
+    <h1 class="logo">Metaverse</h1>
+
+    <nav>
+        <a href="#Game">Gaming</a>
+        <a href="#ft">Features</a>
+        <a href="#sb">Subscribe</a> 
+        <a href="#ab">About Us</a>
+    </nav>
+
+    <a href="signin.html" class="btn-signing" onclick="loginTransition()">SIGN IN</a>
+
+     <script>
+function loginTransition(){
+    document.body.style.transition="1s";
+    document.body.style.opacity="0";
+}
+</script>
+
+</header>
+
+
+        <main>
+          <div class="content">
+            <div class="tag-box">
+                <div class="tag">Interducing &wedbar;</div>
+
+                <h1><br>Metaverse Gaming Experience</h1>
+
+                <p class="description">
+                     Play Games In The Metaverse.
+                </p>
+
+                <div class="buttons">
+                    <a href="#Game" class="btn-get-started">PlayGames </a>
+                    <a href="signin.html" class="btn-signing-main">GetStarted</a>
+
+                </div>
+            </div>
+          </div>
+        </main>
+
+
+       
+ </div>
+           <spline-viewer class="robot-3d" url="https://prod.spline.design/kslZv5XHyEmjlo6T/scene.splinecode"></spline-viewer>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.53/build/spline-viewer.js"></script>
+  <script>
+function revealOnScroll(){
+    const reveals = document.querySelectorAll(".reveal");
+
+    reveals.forEach(el=>{
+        const windowHeight = window.innerHeight;
+        const elementTop = el.getBoundingClientRect().top;
+
+        if(elementTop < windowHeight - 100){
+            el.classList.add("active");
+        }
+    });
+}
+
+window.addEventListener("scroll", revealOnScroll);
+</script>
+
+</section>
+    <center><h2 id="Game" class="reveal">Game</h2>
+</center>
+    <center><img class="gfg" src="https://imgs.crazygames.com/bloxdhop-io_16x9/20250829023851/bloxdhop-io_16x9-cover?metadata=none&amp;quality=60&amp;width=412"></center><br>
+
+   <center><a class="btn-signing-main" href="https://bloxd.io/">Bloxd.io</a></center><br><br>
+    
+   <center><h2 id="ft">Features</h2></center><br>
+   <img class="images" src="images.jfif" alt="Image with glow effect"> <img class="images" src="hello.jfif"> <img class="images" src="ps5.jfif">  <img class="images" src="html.jfif" alt="Image with glow effect"> 
+   
+
+   <center><h1 id="sb">Subscribe</h1></center><br>
+ <center><input type="email" placeholder="Enter your email"></center>
+<center><button class="btn-get-started" onclick="alert('You are Subscribed')">Subscribe</button></center><br>
+    <center><h2 id="ab">About Us</h2></center><br>
+   <center><p class="description">
+        We are a team of passionate gamers and developers dedicated to creating immersive gaming experiences in the metaverse. Our mission is to push the boundaries of gaming technology and provide players with unforgettable adventures in virtual worlds.
+    </p></center><br><br>   
+   <center><footer class="description">@Metaverse 2026 made by Abyan Muhammed </footer></center>
+</body>
+</html>
