@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Advanced Sign In</title>
-
+<!-- Load Google Sign-In library -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<div id="g_id_onload"
+     data-client_id="247484871783-94kv3q00lbpp1p5a9va9v492844ecac7.apps.googleusercontent.com"
+     data-login_uri="https://abyanmuhammed321-max.github.io/Metaverse-The-Gaming-Website-/"
+     data-auto_prompt="false">
+</div>
+<div class="g_id_signin" data-type="standard"></div>
+  
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -174,7 +184,7 @@ button:hover {
       <a href="#" style="color:white;">Forgot?</a>
     </div>
 
-    <button type="submit">Login</button>
+    <a href="index.html" type="submit">Login</a>
     <div class="success" id="successMsg">Login Successful 🎉</div>
 
   </form>
@@ -263,3 +273,4 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
 
 </body>
 </html>
+
