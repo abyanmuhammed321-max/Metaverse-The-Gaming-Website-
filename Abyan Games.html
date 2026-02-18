@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Abyan Fighting Game 3D</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0c0c10;
+      color: #ffffff;
+      font-family: Consolas, monospace;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+    }
+    #ui { position: fixed; inset: 0; pointer-events: none; }
+    .top {
+      position: absolute; top: 12px; width: 100%; display: flex;
+      justify-content: space-between; padding: 0 24px; box-sizing: border-box;
+    }
+    .bar {
+      width: 360px; height: 20px; background: #282838;
+      border: 2px solid #ffffff; border-radius: 6px; overflow: hidden;
+    }
+    .bar > div { height: 100%; width: 100%; background: #5096ff; }
+    .bar.red > div { background: #dc4141; }
+    .labels {
+      position: absolute; top: 46px; width: 100%; display: flex;
+      justify-content: space-between; padding: 0 24px; box-sizing: border-box; font-size: 18px;
+    }
+    .center { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 32px; }
+    .banner {
+      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center;
+    }
+    .banner h1 { margin: 0 0 12px 0; font-size: 42px; color: #ffd250; }
+    .banner p { margin: 6px 0; font-size: 22px; color: #ffffff; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div class="top">
+      <div class="bar"><div id="p1hp"></div></div>
+      <div class="center" id="timer">90</div>
+      <div class="bar red"><div id="p2hp"></div></div>
+    </div>
+    <div class="labels">
+      <div>P1</div>
+      <div id="p2label">AI</div>
+    </div>
+    <div class="banner" id="banner" style="display:none;">
+      <h1 id="bannerTitle">Abyan Fighting Game 3D</h1>
+      <p id="bannerMsg1">Press Enter to Start</p>
+      <p id="bannerMsg2">Mode: P1 vs AI (Press T to toggle)</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+
+    // ----------------------
+    // Config
+    // ----------------------
+    const FPS = 60;
+    const ARENA_WIDTH = 30;
+    const ARENA_DEPTH = 16;
+    const GROUND_Y = 0;
+    const STAGE_LEFT = -ARENA_WIDTH/2 + 1.0;
+    const STAGE_RIGHT = ARENA_WIDTH/2 - 1.0;
+
+    const PLAYER_SPEED = 0.18;
+    const JUMP_VEL = 0.42;
+    const GRAVITY = 0.02;
+
+    const PUNCH_DAMAGE = 8;
+    const KICK_DAMAGE = 12;
+    const BLOCK_REDUCTION = 0.65;
+
+    const PUNCH_RANGE = 1.6;
+    const KICK_RANGE = 2.2;
+    const ATTACK_COOLDOWN = 14;
+    const BLOCK_STUN_FRAMES = 8;
+    const HIT_STUN_FRAMES = 16;
+    const INVULN_FRAMES = 8;
+
+    const MAX_HEALTH = 100;
+    const ROUND_TIME = 90;
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    // ----------------------
+    // Scene
+    // ----------------------
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0c0c10);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 10, 20);
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x202040, 0.8);
+    scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(8, 12, 4);
+    scene.add(dir);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(ARENA_WIDTH, ARENA_DEPTH),
+      new THREE.MeshStandardMaterial({ color: 0x1e2230, roughness: 1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = GROUND_Y;
+    scene.add(ground);
+
+    const wallGroup = new THREE.Group();
+    for (let i = 0; i < 10; i++) {
+      const w = 1.4, h = 4 + (i % 3) * 0.8, d = 3;
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(`rgb(${25+i*3}, ${25+i*3}, ${40+i*5})`) })
+      );
+      mesh.position.set(-ARENA_WIDTH/2 + 2 + i * 3, h/2, -ARENA_DEPTH/2 - 1.5);
+      wallGroup.add(mesh);
+    }
+    scene.add(wallGroup);
+
+    const hbMaterial = new THREE.MeshBasicMaterial({ color: 0xff9696, wireframe: true });
+    const createHB = () => new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), hbMaterial);
+
+    // ----------------------
+    // Humanoid fighter
+    // ----------------------
+    class Humanoid {
+      constructor(x, facingRight = true, colorHex = 0x5096ff, name = "Player") {
+        this.name = name;
+        this.colorHex = colorHex;
+
+        this.root = new THREE.Group();
+        this.root.position.set(x, GROUND_Y + 1.2, 0);
+        scene.add(this.root);
+
+        // Torso
+        const torsoMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.7 });
+        this.torso = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.4, 0.8), torsoMat);
+        this.torso.position.set(0, 0.4, 0);
+        this.root.add(this.torso);
+
+        // Head
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xf0e0c0, roughness: 0.8 });
+        this.head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), headMat);
+        this.head.position.set(0, 1.3, 0);
+        this.root.add(this.head);
+
+        // Arms
+        const limbMat = new THREE.MeshStandardMaterial({ color: 0xe0b070, roughness: 0.8 });
+        this.leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.0, 0.3), limbMat);
+        this.rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.0, 0.3), limbMat);
+        this.leftArm.position.set(-0.7, 0.4, 0);
+        this.rightArm.position.set(0.7, 0.4, 0);
+        this.leftArm.rotation.z = 0.05;
+        this.rightArm.rotation.z = -0.05;
+        this.root.add(this.leftArm);
+        this.root.add(this.rightArm);
+
+        // Legs
+        this.leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.35), torsoMat);
+        this.rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.35), torsoMat);
+        this.leftLeg.position.set(-0.3, -0.6, 0);
+        this.rightLeg.position.set(0.3, -0.6, 0);
+        this.root.add(this.leftLeg);
+        this.root.add(this.rightLeg);
+
+        // Block outline
+        this.blockOutline = new THREE.Mesh(
+          new THREE.BoxGeometry(1.4, 2.4, 1.0),
+          new THREE.MeshBasicMaterial({ color: 0x78c8ff, wireframe: true })
+        );
+        this.blockOutline.visible = false;
+        this.root.add(this.blockOutline);
+
+        // Attack preview
+        this.hbPreview = createHB();
+        this.hbPreview.visible = false;
+        scene.add(this.hbPreview);
+
+        // State
+        this.facingRight = facingRight;
+        this.vx = 0;
+        this.vy = 0;
+        this.health = MAX_HEALTH;
+        this.isGrounded = true;
+        this.isBlocking = false;
+        this.isAttacking = false;
+        this.attackType = null;
+        this.attackTimer = 0;
+        this.hitStun = 0;
+        this.blockStun = 0;
+        this.invuln = 0;
+        this.comboTimer = 0;
+        this.dead = false;
+
+        // Anim drivers
+        this.idleT = Math.random() * Math.PI * 2;
+      }
+
+      x() { return this.root.position.x; }
+      y() { return this.root.position.y; }
+      centerX() { return this.root.position.x; }
+
+      updateFacing(other) {
+        this.facingRight = other.centerX() > this.centerX();
+        // Slight torso turn toward opponent
+        this.torso.rotation.y = this.facingRight ? -0.15 : 0.15;
+      }
+
+      applyGravity() {
+        if (!this.isGrounded) {
+          this.vy -= GRAVITY;
+          this.root.position.y += this.vy;
+          const floorY = GROUND_Y + 1.2;
+          if (this.root.position.y <= floorY) {
+            this.root.position.y = floorY;
+            this.vy = 0;
+            this.isGrounded = true;
+          }
+        }
+      }
+
+      move(left, right, jump, block) {
+        if (this.dead) return;
+
+        if (this.hitStun > 0 || this.blockStun > 0) {
+          this.vx = 0;
+          this.isBlocking = false;
+        } else {
+          let dir = 0;
+          if (left) dir -= 1;
+          if (right) dir += 1;
+          this.vx = dir * PLAYER_SPEED;
+          this.root.position.x = clamp(this.root.position.x + this.vx, STAGE_LEFT, STAGE_RIGHT);
+
+          if (jump && this.isGrounded) {
+            this.isGrounded = false;
+            this.vy = JUMP_VEL;
+          }
+
+          this.isBlocking = !!block && this.isGrounded && !this.isAttacking;
+          this.blockOutline.visible = this.isBlocking;
+          // Arms up slightly while blocking
+          if (this.isBlocking) {
+            this.leftArm.rotation.x = -0.6;
+            this.rightArm.rotation.x = -0.6;
+          }
+        }
+
+        this.applyGravity();
+        this.updateAnimation();
+
+        // timers
+        if (this.hitStun > 0) this.hitStun--;
+        if (this.blockStun > 0) this.blockStun--;
+        if (this.invuln > 0) this.invuln--;
+        if (this.comboTimer > 0) this.comboTimer--;
+
+        if (this.isAttacking) {
+          this.attackTimer--;
+          if (this.attackTimer <= 0) {
+            this.isAttacking = false;
+            this.attackType = null;
+            this.hbPreview.visible = false;
+          }
+        }
+
+        if (this.dead) {
+          // Tint when dead
+          this.torso.material.color.setHex(0x464650);
+          this.leftLeg.material.color.setHex(0x464650);
+          this.rightLeg.material.color.setHex(0x464650);
+          this.blockOutline.visible = false;
+        }
+      }
+
+      canAttack() {
+        return !this.dead && this.hitStun === 0 && this.blockStun === 0 && !this.isAttacking;
+      }
+
+      attack(type) {
+        if (!this.canAttack()) return;
+        this.isAttacking = true;
+        this.attackType = type;
+        this.attackTimer = ATTACK_COOLDOWN;
+        this.comboTimer = 12;
+
+        // Reset limb poses for attack
+        if (type === "punch") {
+          // Forward arm swings toward facing side
+          if (this.facingRight) this.rightArm.rotation.x = -1.2;
+          else this.leftArm.rotation.x = -1.2;
+        } else {
+          // Kick: forward leg swings
+          if (this.facingRight) this.rightLeg.rotation.x = 1.0;
+          else this.leftLeg.rotation.x = 1.0;
+        }
+      }
+
+      attackHitbox() {
+        if (!this.isAttacking) return null;
+        const reach = this.attackType === "punch" ? PUNCH_RANGE : KICK_RANGE;
+
+        // Base at torso front
+        const frontOffset = 0.6;
+        const x = this.facingRight ? (this.root.position.x + frontOffset + reach/2)
+                                   : (this.root.position.x - frontOffset - reach/2);
+        const y = this.root.position.y + 0.4;
+        const z = this.root.position.z;
+        const hw = reach, hh = 1.0, hd = 0.7;
+
+        // Preview box
+        this.hbPreview.visible = true;
+        this.hbPreview.scale.set(hw, hh, hd);
+        this.hbPreview.position.set(x, y, z);
+
+        return { x, y, z, hw, hh, hd };
+      }
+
+      aabb() {
+        return { x: this.root.position.x, y: this.root.position.y + 0.3, z: this.root.position.z, hw: 0.6, hh: 1.2, hd: 0.5 };
+      }
+
+      takeHit(rawDamage, pushDir) {
+        if (this.invuln > 0 || this.dead) return;
+        let damage;
+        if (this.isBlocking) {
+          damage = Math.floor(rawDamage * (1.0 - BLOCK_REDUCTION));
+          this.blockStun = BLOCK_STUN_FRAMES;
+        } else {
+          damage = rawDamage;
+          this.hitStun = HIT_STUN_FRAMES;
+          this.invuln = INVULN_FRAMES;
+          // brief flinch
+          this.torso.rotation.x = -0.12;
+        }
+        this.health = clamp(this.health - damage, 0, MAX_HEALTH);
+        this.root.position.x = clamp(this.root.position.x + pushDir * 0.6, STAGE_LEFT, STAGE_RIGHT);
+        if (this.health <= 0) {
+          this.dead = true;
+          this.isAttacking = false;
+          this.isBlocking = false;
+          // collapse a bit
+          this.torso.rotation.x = 0.3;
+          this.leftLeg.rotation.x = -0.4;
+          this.rightLeg.rotation.x = -0.6;
+        }
+      }
+
+      updateAnimation() {
+        // Idle breathing and light sway
+        this.idleT += 0.05;
+        const breathe = Math.sin(this.idleT) * 0.03;
+        this.torso.position.y = 0.4 + breathe;
+        this.head.position.y = 1.3 + breathe * 1.2;
+
+        // Reset default arm/leg rotations if not blocking/attacking
+        if (!this.isBlocking && !this.isAttacking) {
+          const sway = Math.sin(this.idleT * 0.8) * 0.1;
+          this.leftArm.rotation.x = sway * 0.5;
+          this.rightArm.rotation.x = -sway * 0.5;
+          this.leftLeg.rotation.x = -sway * 0.2;
+          this.rightLeg.rotation.x = sway * 0.2;
+        }
+
+        // Recover attack poses over time
+        if (this.isAttacking) {
+          // Ease limbs back
+          this.rightArm.rotation.x *= 0.88;
+          this.leftArm.rotation.x *= 0.88;
+          this.rightLeg.rotation.x *= 0.88;
+          this.leftLeg.rotation.x *= 0.88;
+        }
+      }
+    }
+
+    // ----------------------
+    // AI
+    // ----------------------
+    class SimpleAI {
+      constructor() {
+        this.blockTimer = 0;
+        this.attackCooldown = 0;
+        this.jumpCooldown = 0;
+      }
+      think(me, opp, input) {
+        me.updateFacing(opp);
+
+        if (this.blockTimer > 0) this.blockTimer--;
+        if (this.attackCooldown > 0) this.attackCooldown--;
+        if (this.jumpCooldown > 0) this.jumpCooldown--;
+
+        const optimal = 2.2;
+        const dist = Math.abs(me.centerX() - opp.centerX());
+        let toward = 0;
+        if (dist > optimal + 0.3) toward = me.facingRight ? 1 : -1;
+        else if (dist < optimal - 0.3) toward = me.facingRight ? -1 : 1;
+
+        const left = toward < 0;
+        const right = toward > 0;
+
+        let jump = false;
+        if (me.isGrounded && this.jumpCooldown === 0 && Math.random() < 0.02) {
+          jump = true; this.jumpCooldown = 90;
+        }
+
+        let block = false;
+        if (opp.isAttacking && dist < 2.8 && Math.random() < 0.6) {
+          block = true; this.blockTimer = 18;
+        }
+
+        if (me.canAttack() && this.attackCooldown === 0 && dist < 2.6 && !block) {
+          if (Math.random() < 0.55) me.attack("kick"); else me.attack("punch");
+          this.attackCooldown = 28;
+        }
+
+        input.left = left; input.right = right; input.jump = jump; input.block = block;
+      }
+    }
+
+    // ----------------------
+    // Input
+    // ----------------------
+    const keys = new Set();
+    window.addEventListener("keydown", e => keys.add(e.code));
+    window.addEventListener("keyup", e => keys.delete(e.code));
+
+    function p1Inputs() {
+      return {
+        left: keys.has("KeyA"),
+        right: keys.has("KeyD"),
+        jump: keys.has("KeyW"),
+        block: keys.has("KeyS"),
+        punch: keys.has("KeyJ"),
+        kick: keys.has("KeyK"),
+      };
+    }
+    function p2Inputs() {
+      return {
+        left: keys.has("ArrowLeft"),
+        right: keys.has("ArrowRight"),
+        jump: keys.has("ArrowUp"),
+        block: keys.has("ArrowDown"),
+        punch: keys.has("KeyN"),
+        kick: keys.has("KeyM"),
+      };
+    }
+
+    // ----------------------
+    // UI
+    // ----------------------
+    const p1hpEl = document.getElementById("p1hp");
+    const p2hpEl = document.getElementById("p2hp");
+    const timerEl = document.getElementById("timer");
+    const p2labelEl = document.getElementById("p2label");
+    const bannerEl = document.getElementById("banner");
+    const bannerTitleEl = document.getElementById("bannerTitle");
+    const bannerMsg1El = document.getElementById("bannerMsg1");
+    const bannerMsg2El = document.getElementById("bannerMsg2");
+
+    // ----------------------
+    // Game states
+    // ----------------------
+    const STATE_MENU = 0, STATE_PLAY = 1, STATE_GAMEOVER = 2;
+    let state = STATE_MENU;
+    let useAI = true;
+    let roundTimerFrames = ROUND_TIME * FPS;
+
+    let p1 = new Humanoid(-ARENA_WIDTH/4, true, 0x5096ff, "P1");
+    let p2 = new Humanoid(ARENA_WIDTH/4, false, 0xdc4141, "P2");
+    const ai = new SimpleAI();
+
+    function resetRound() {
+      scene.remove(p1.hbPreview); scene.remove(p2.hbPreview);
+      scene.remove(p1.root); scene.remove(p2.root);
+
+      p1 = new Humanoid(-ARENA_WIDTH/4, true, 0x5096ff, "P1");
+      p2 = new Humanoid(ARENA_WIDTH/4, false, 0xdc4141, useAI ? "AI" : "P2");
+      roundTimerFrames = ROUND_TIME * FPS;
+      p2labelEl.textContent = useAI ? "AI" : "P2";
+    }
+
+    function setMenuBanner() {
+      bannerEl.style.display = "block";
+      bannerTitleEl.textContent = "Abyan Fighting Game 3D";
+      bannerMsg1El.textContent = "Press Enter to Start";
+      bannerMsg2El.textContent = `Mode: ${useAI ? "P1 vs AI" : "P1 vs P2"} (Press T to toggle)`;
+    }
+
+    // ----------------------
+    // Combat
+    // ----------------------
+    function aabbIntersect(a, b) {
+      return Math.abs(a.x - b.x) <= (a.hw + b.hw) &&
+             Math.abs(a.y - b.y) <= (a.hh + b.hh) &&
+             Math.abs(a.z - b.z) <= (a.hd + b.hd);
+    }
+
+    function handleCombat(p1, p2) {
+      p1.updateFacing(p2); p2.updateFacing(p1);
+
+      const hb1 = p1.attackHitbox();
+      const hb2 = p2.attackHitbox();
+
+      const aabbP2 = p2.aabb();
+      const aabbP1 = p1.aabb();
+
+      if (hb1) {
+        const hbBox = { x: hb1.x, y: hb1.y, z: hb1.z, hw: hb1.hw/2, hh: hb1.hh/2, hd: hb1.hd/2 };
+        if (aabbIntersect(hbBox, aabbP2)) {
+          const dmg = p1.attackType === "punch" ? PUNCH_DAMAGE : KICK_DAMAGE;
+          const pushDir = p1.facingRight ? 1 : -1;
+          p2.takeHit(dmg, pushDir);
+        }
+      }
+
+      if (hb2) {
+        const hbBox = { x: hb2.x, y: hb2.y, z: hb2.z, hw: hb2.hw/2, hh: hb2.hh/2, hd: hb2.hd/2 };
+        if (aabbIntersect(hbBox, aabbP1)) {
+          const dmg = p2.attackType === "punch" ? PUNCH_DAMAGE : KICK_DAMAGE;
+          const pushDir = p2.facingRight ? 1 : -1;
+          p1.takeHit(dmg, pushDir);
+        }
+      }
+    }
+
+    // ----------------------
+    // Camera follow
+    // ----------------------
+    function updateCamera() {
+      const midX = (p1.x() + p2.x()) / 2;
+      const dist = Math.abs(p1.x() - p2.x());
+      const targetZ = 16 + dist * 0.4;
+      const targetY = 8 + dist * 0.1;
+
+      camera.position.x = lerp(camera.position.x, midX, 0.08);
+      camera.position.y = lerp(camera.position.y, targetY, 0.08);
+      camera.position.z = lerp(camera.position.z, targetZ, 0.08);
+      camera.lookAt(new THREE.Vector3(midX, 1.2, 0));
+    }
+
+    // ----------------------
+    // Main loop
+    // ----------------------
+    let last = performance.now();
+    function loop(now) {
+      const dt = now - last;
+      last = now;
+
+      if (state === STATE_MENU) {
+        setMenuBanner();
+        if (keys.has("Enter")) {
+          state = STATE_PLAY;
+          bannerEl.style.display = "none";
+          resetRound();
+        }
+        if (keys.has("KeyT")) {
+          useAI = !useAI;
+          bannerMsg2El.textContent = `Mode: ${useAI ? "P1 vs AI" : "P1 vs P2"} (Press T to toggle)`;
+        }
+      } else if (state === STATE_GAMEOVER) {
+        bannerEl.style.display = "block";
+        bannerTitleEl.textContent = "Round Over";
+        bannerMsg1El.textContent = "Press Enter to Play Again";
+        bannerMsg2El.textContent = "Press Esc for Menu";
+        if (keys.has("Enter")) {
+          state = STATE_PLAY;
+          bannerEl.style.display = "none";
+          resetRound();
+        }
+        if (keys.has("Escape")) {
+          state = STATE_MENU;
+          setMenuBanner();
+        }
+      }
+
+      if (state === STATE_PLAY) {
+        const in1 = p1Inputs();
+        if (in1.punch && p1.canAttack()) p1.attack("punch");
+        if (in1.kick && p1.canAttack()) p1.attack("kick");
+        p1.move(in1.left, in1.right, in1.jump, in1.block);
+
+        let in2 = p2Inputs();
+        if (useAI) {
+          in2 = { left:false, right:false, jump:false, block:false, punch:false, kick:false };
+          ai.think(p2, p1, in2);
+        } else {
+          if (in2.punch && p2.canAttack()) p2.attack("punch");
+          if (in2.kick && p2.canAttack()) p2.attack("kick");
+        }
+        p2.move(in2.left, in2.right, in2.jump, in2.block);
+
+        handleCombat(p1, p2);
+
+        roundTimerFrames--;
+        const t = Math.max(0, Math.floor(roundTimerFrames / FPS));
+        timerEl.textContent = String(t).padStart(2, "0");
+
+        let winnerText = null;
+        if (p1.dead && p2.dead) winnerText = "Double KO!";
+        else if (p1.dead) winnerText = useAI ? "AI Wins!" : "P2 Wins!";
+        else if (p2.dead) winnerText = "P1 Wins!";
+        else if (roundTimerFrames <= 0) {
+          if (p1.health > p2.health) winnerText = "P1 Wins (Time)!";
+          else if (p2.health > p1.health) winnerText = useAI ? "AI Wins (Time)!" : "P2 Wins (Time)!";
+          else winnerText = "Draw!";
+        }
+        if (winnerText) {
+          state = STATE_GAMEOVER;
+          bannerEl.style.display = "block";
+          bannerTitleEl.textContent = winnerText;
+          bannerMsg1El.textContent = "Press Enter to Play Again";
+          bannerMsg2El.textContent = "Press Esc for Menu";
+        }
+      }
+
+      p1hpEl.style.width = `${(p1.health / MAX_HEALTH) * 100}%`;
+      p2hpEl.style.width = `${(p2.health / MAX_HEALTH) * 100}%`;
+
+      updateCamera();
+      renderer.render(scene, camera);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    window.addEventListener("resize", () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+</body>
+</html>
