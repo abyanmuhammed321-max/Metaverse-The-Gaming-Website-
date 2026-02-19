@@ -203,6 +203,17 @@ footer{
         <a href="#ab">About</a>
     </nav>
     <a href="signin.html" class="btn-signing">SIGN IN</a>
+    <div id="userProfile"></div>
+
+<script>
+let user = JSON.parse(localStorage.getItem("googleUser"));
+if(user){
+    document.getElementById("userProfile").innerHTML =
+        `<img src="${user.picture}" style="width:40px;border-radius:50%;"> 
+         <span>${user.name}</span>`;
+}
+</script>
+
 </header>
 
 <main>
@@ -308,3 +319,4 @@ window.addEventListener("scroll", revealOnScroll);
 
 </body>
 </html>
+
