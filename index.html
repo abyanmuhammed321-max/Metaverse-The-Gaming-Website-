@@ -6,6 +6,134 @@
     <title>Metaverse | The Gaming Website</title>
     <link rel="icon" href="virtual-reality.png">
     <link rel="stylesheet" href="style.css">
+    
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Login Screen */
+    #loginScreen {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    /* Website Content */
+    #websiteContent {
+      display: none;
+      padding: 20px;
+    }
+
+    .logout-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: red;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #profileBox {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    #profileBox img {
+      width: 70px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN SCREEN -->
+<div id="loginScreen">
+  <h2>Login to Enter the Metaverse</h2>
+
+  <div id="g_id_onload"
+       data-client_id="YOUR_GOOGLE_CLIENT_ID"
+       data-context="signin"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="signin_with"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
+</div>
+
+<!-- 🌍 WEBSITE CONTENT -->
+<div id="websiteContent">
+
+  <button class="logout-btn" onclick="logout()">Logout</button>
+
+  <h1>Welcome to the Metaverse 🚀</h1>
+
+  <div id="profileBox">
+    <img id="userImage">
+    <h3 id="userName"></h3>
+  </div>
+
+  <!-- 🔥 YOUR REAL WEBSITE CONTENT BELOW -->
+  <p>This is your protected Metaverse Gaming Website content.</p>
+
+</div>
+
+<script>
+  function parseJwt(token) {
+    let base64Url = token.split('.')[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  function handleCredentialResponse(response) {
+    const user = parseJwt(response.credential);
+    localStorage.setItem("user", JSON.stringify(user));
+    showWebsite(user);
+  }
+
+  function showWebsite(user) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("websiteContent").style.display = "block";
+
+    document.getElementById("userName").innerText = user.name;
+    document.getElementById("userImage").src = user.picture;
+  }
+
+  function logout() {
+    localStorage.removeItem("user");
+    location.reload();
+  }
+
+  // 🔐 Protect on page load
+  window.onload = function() {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      showWebsite(JSON.parse(savedUser));
+    } else {
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("websiteContent").style.display = "none";
+    }
+  }
+</script>
     <script>
 const cursor = document.querySelector(".cursor");
 document.addEventListener("mousemove", e=>{
@@ -193,4 +321,5 @@ window.addEventListener("scroll", revealOnScroll);
     </p></center><br><br>   
    <center><footer class="description">@Metaverse 2026 made by Abyan Muhammed </footer></center>
 </body>
+
 </html>
