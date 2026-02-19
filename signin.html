@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Metaverse Login</title>
-
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
@@ -16,11 +14,10 @@ body{
     align-items:center;
     font-family:'Segoe UI', sans-serif;
     background: linear-gradient(-45deg, #0f0c29, #1a1a40, #000428, #004e92);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
+    background-size:400% 400%;
+    animation:gradientBG 15s ease infinite;
     color:white;
 }
-
 @keyframes gradientBG{
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
@@ -34,77 +31,26 @@ body{
     background:rgba(255,255,255,0.05);
     backdrop-filter:blur(20px);
     border:1px solid rgba(255,255,255,0.1);
-    box-shadow:0 0 40px rgba(0,255,255,0.3);
     text-align:center;
 }
-
-.login-box h2{
-    margin-bottom:30px;
-    text-shadow:0 0 15px #00f7ff;
-}
-
-input{
-    width:100%;
-    padding:12px;
-    margin:12px 0;
-    border-radius:25px;
-    border:none;
-    outline:none;
-    background:rgba(255,255,255,0.1);
-    color:white;
-    text-align:center;
-}
-
-button{
-    width:100%;
-    padding:12px;
-    border-radius:25px;
-    border:2px solid #00f7ff;
-    background:transparent;
-    color:#00f7ff;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.4s;
-}
-
-button:hover{
-    background:#00f7ff;
-    color:black;
-    box-shadow:0 0 20px #00f7ff,
-               0 0 40px #00f7ff,
-               0 0 60px #00f7ff;
-}
-
 .profile{
     margin-top:20px;
     display:none;
 }
-
 .profile img{
     width:70px;
     border-radius:50%;
     box-shadow:0 0 20px #00f7ff;
 }
-
 </style>
 </head>
 <body>
 
 <div class="login-box">
+<h2>Sign In with Google</h2>
 
-<h2>Metaverse Login</h2>
-
-<input type="text" id="username" placeholder="Enter Username">
-<input type="password" id="password" placeholder="Enter Password">
-<button onclick="normalLogin()">Login</button>
-
-<br><br>
-<hr style="opacity:0.3;">
-<br>
-
-<!-- GOOGLE SIGN IN BUTTON -->
 <div id="g_id_onload"
-     data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
+     data-client_id="247484871783-22fmk2v6j10coe1fglqv20q4cvmqsc8a.apps.googleusercontent.com"
      data-callback="handleCredentialResponse">
 </div>
 
@@ -120,52 +66,31 @@ button:hover{
     <h3 id="name"></h3>
     <img id="picture">
 </div>
-
 </div>
 
 <script>
-
-/* ===== NORMAL LOGIN ===== */
-function normalLogin(){
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
-
-    if(user === "admin" && pass === "1234"){
-        window.location.href = "index.html";
-    } else {
-        alert("Invalid Username or Password");
-    }
-}
-
-/* ===== GOOGLE LOGIN ===== */
 function handleCredentialResponse(response){
+    const user = parseJwt(response.credential);
 
-    const responsePayload = parseJwt(response.credential);
+    localStorage.setItem("googleUser", JSON.stringify(user));
 
     document.getElementById("profile").style.display="block";
-    document.getElementById("name").innerText = responsePayload.name;
-    document.getElementById("picture").src = responsePayload.picture;
+    document.getElementById("name").innerText = user.name;
+    document.getElementById("picture").src = user.picture;
 
-    // Save user info
-    localStorage.setItem("googleUser", JSON.stringify(responsePayload));
-
-    // Redirect after 2 seconds
     setTimeout(()=>{
-        window.location.href = "index.html";
-    },2000);
+        window.location.href="index.html";
+    },1200);
 }
 
-/* ===== Decode JWT ===== */
-function parseJwt (token) {
+function parseJwt(token){
     var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    var base64 = base64Url.replace(/-/g,'+').replace(/_/g,'/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c){
+        return '%' + ('00'+c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
-
     return JSON.parse(jsonPayload);
 }
-
 </script>
 
 </body>
