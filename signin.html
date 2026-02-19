@@ -91,7 +91,11 @@ function parseJwt(token){
     }).join(''));
     return JSON.parse(jsonPayload);
 }
+    localStorage.setItem("googleUser", JSON.stringify(user));
+window.location.href = "index.html";
+
 </script>
 
 </body>
 </html>
+
