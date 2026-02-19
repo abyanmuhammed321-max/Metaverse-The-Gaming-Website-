@@ -1,110 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Metaverse Login</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      margin-top: 50px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metaverse Login</title>
 
-    #profile {
-      display: none;
-      margin-top: 20px;
-    }
+<style>
 
-    #profile img {
-      width: 80px;
-      border-radius: 50%;
-    }
+/* ===== BACKGROUND ===== */
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:'Segoe UI', sans-serif;
+    background: linear-gradient(-45deg, #0f0c29, #1a1a40, #000428, #004e92);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color:white;
+}
 
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
+@keyframes gradientBG{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
 
-    .logout-btn {
-      background: red;
-      color: white;
-    }
-  </style>
+/* ===== LOGIN CARD ===== */
+.login-box{
+    width:350px;
+    padding:40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 0 40px rgba(0,255,255,0.3);
+    text-align:center;
+    animation: fadeIn 1.2s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(40px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.login-box h2{
+    margin-bottom:30px;
+    text-shadow:0 0 15px #00f7ff;
+}
+
+/* ===== INPUTS ===== */
+input{
+    width:100%;
+    padding:12px;
+    margin:12px 0;
+    border-radius:25px;
+    border:none;
+    outline:none;
+    background:rgba(255,255,255,0.1);
+    color:white;
+    text-align:center;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,0.6);
+}
+
+/* ===== BUTTON ===== */
+button{
+    width:100%;
+    padding:12px;
+    border-radius:25px;
+    border:2px solid #00f7ff;
+    background:transparent;
+    color:#00f7ff;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.4s;
+}
+
+button:hover{
+    background:#00f7ff;
+    color:black;
+    box-shadow:0 0 20px #00f7ff,
+               0 0 40px #00f7ff,
+               0 0 60px #00f7ff;
+}
+
+/* ===== ERROR TEXT ===== */
+#error{
+    margin-top:15px;
+    color:#ff4d4d;
+    font-size:14px;
+}
+
+</style>
 </head>
-
 <body>
 
-  <h2>Login to Enter Metaverse</h2>
+<div class="login-box">
+    <h2>Metaverse Login</h2>
 
-  <!-- Google Login -->
-  <div id="loginSection">
-    <div id="g_id_onload"
-         data-client_id="247484871783-22fmk2v6j10coe1fglqv20q4cvmqsc8a.apps.googleusercontent.com"
-         data-context="signin"
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
-    </div>
+    <input type="text" id="username" placeholder="Enter Username">
+    <input type="password" id="password" placeholder="Enter Password">
 
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="outline"
-         data-text="signin_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
-    </div>
-  </div>
+    <button onclick="login()">Login</button>
 
-  <!-- Profile Section -->
-  <div id="profile">
-    <img id="userImage" />
-    <h3 id="userName"></h3>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-  </div>
+    <p id="error"></p>
+</div>
 
 <script>
-  function parseJwt(token) {
-    let base64Url = token.split('.')[1];
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  }
 
-  function handleCredentialResponse(response) {
-    const user = parseJwt(response.credential);
+function login(){
 
-    // Save user data
-    localStorage.setItem("user", JSON.stringify(user));
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
 
-    showUser(user);
-  }
+    // Demo credentials
+    if(user === "admin" && pass === "1234"){
 
-  function showUser(user) {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("profile").style.display = "block";
+        // Smooth fade out
+        document.body.style.transition = "0.5s";
+        document.body.style.opacity = "0";
 
-    document.getElementById("userName").innerText = user.name;
-    document.getElementById("userImage").src = user.picture;
-  }
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 500);
 
-  function logout() {
-    localStorage.removeItem("user");
-    location.reload();
-  }
-
-  // Auto login if already saved
-  window.onload = function() {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      showUser(JSON.parse(savedUser));
+    } else {
+        document.getElementById("error").innerText = "Invalid Username or Password";
     }
-  }
+}
+
 </script>
 
 </body>
