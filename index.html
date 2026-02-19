@@ -765,9 +765,41 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 </script>
+<script>
+const getStartedBtn = document.getElementById("getStartedBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+// When user signs in
+function handleLogin(user) {
+    localStorage.setItem("loggedIn", "true");
+
+    getStartedBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+}
+
+// When user logs out
+function handleLogout() {
+    localStorage.removeItem("loggedIn");
+
+    getStartedBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+}
+
+// Logout button click
+logoutBtn.addEventListener("click", handleLogout);
+
+// Check login status when page loads
+window.onload = function () {
+    if (localStorage.getItem("loggedIn") === "true") {
+        getStartedBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+    }
+};
+</script>
 
 </body>
 </html>
+
 
 
 
