@@ -5,6 +5,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Metaverse | The Gaming Website</title>
 <link rel="icon" href="virtual-reality.png">
+    <style>
+
+.user-wrapper{
+    position:relative;
+    display:flex;
+    align-items:center;
+}
+
+.user-wrapper img{
+    width:42px;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 15px #00f7ff;
+    transition:0.3s;
+}
+
+.user-wrapper img:hover{
+    transform:scale(1.1);
+}
+
+.dropdown{
+    position:absolute;
+    top:60px;
+    right:0;
+    background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(15px);
+    padding:18px;
+    border-radius:15px;
+    min-width:220px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    box-shadow:0 0 25px #00f7ff;
+    opacity:0;
+    transform:translateY(-10px);
+    pointer-events:none;
+    transition:0.3s ease;
+}
+
+.dropdown.active{
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+}
+
+.dropdown strong{
+    font-size:15px;
+}
+
+.dropdown small{
+    opacity:0.6;
+    font-size:12px;
+}
+
+.logout-btn{
+    padding:8px;
+    border:none;
+    border-radius:20px;
+    background:#00f7ff;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.logout-btn:hover{
+    box-shadow:0 0 15px #00f7ff;
+}
+
+</style>
+
 <style>
 
 .profile-wrapper{
@@ -275,7 +344,7 @@ footer{
    <a href="signin.html" class="btn-signing" id="signInBtn">SIGN IN</a>
     <button class="btn-signing" id="logoutBtn" style="display:none;" onclick="logout()">LOGOUT</button>
 <div id="profileArea"></div>
-
+     <div id="userSection"></div>
     <div id="userProfile"></div>
     <div id="userArea"></div>
 <div class="profile-container" id="profileContainer"></div>
@@ -616,9 +685,58 @@ function logout(){
 }
 
 </script>
+<script>
+
+let user = JSON.parse(localStorage.getItem("googleUser"));
+let signInBtn = document.getElementById("signInBtn");
+let userSection = document.getElementById("userSection");
+
+// Protect page (optional but recommended)
+if(!user){
+    window.location.href = "signin.html";
+}
+
+// If logged in
+if(user){
+
+    signInBtn.style.display = "none";
+
+    userSection.innerHTML = `
+        <div class="user-wrapper">
+            <img src="${user.picture}" onclick="toggleDropdown()" />
+            <div class="dropdown" id="dropdownMenu">
+                <strong>${user.name}</strong>
+                <small>${user.email}</small>
+                <hr style="opacity:0.2;">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    `;
+}else{
+    signInBtn.style.display = "inline-block";
+}
+
+function toggleDropdown(){
+    document.getElementById("dropdownMenu").classList.toggle("active");
+}
+
+document.addEventListener("click", function(e){
+    let menu = document.getElementById("dropdownMenu");
+    if(menu && !e.target.closest(".user-wrapper")){
+        menu.classList.remove("active");
+    }
+});
+
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.href = "signin.html";
+}
+
+</script>
 
 </body>
 </html>
+
 
 
 
