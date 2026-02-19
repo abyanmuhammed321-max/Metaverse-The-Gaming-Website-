@@ -204,6 +204,9 @@ footer{
     </nav>
     <a href="signin.html" class="btn-signing">SIGN IN</a>
     <div id="userProfile"></div>
+    <div id="userArea"></div>
+<div class="profile-container" id="profileContainer"></div>
+
 
 <script>
 let user = JSON.parse(localStorage.getItem("googleUser"));
@@ -316,7 +319,102 @@ function revealOnScroll(){
 }
 window.addEventListener("scroll", revealOnScroll);
 </script>
+<script>
+
+// Check login
+let user = JSON.parse(localStorage.getItem("googleUser"));
+
+if(user){
+    document.getElementById("userArea").innerHTML = `
+        <img src="${user.picture}" style="width:40px;border-radius:50%;vertical-align:middle;">
+        <span style="margin:0 10px;">${user.name}</span>
+        <button onclick="logout()" style="padding:6px 12px;border-radius:20px;border:none;background:#00f7ff;color:black;cursor:pointer;">
+            Logout
+        </button>
+    `;
+}else{
+    // If not logged in, redirect to login
+    window.location.href="signin.html";
+}
+
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.href="signin.html";
+}
+
+</script>
+<style>
+.profile-container{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.profile-container img{
+    width:40px;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 15px #00f7ff;
+}
+
+.dropdown{
+    position:absolute;
+    top:55px;
+    right:0;
+    background:rgba(0,0,0,0.8);
+    backdrop-filter:blur(10px);
+    padding:15px;
+    border-radius:15px;
+    display:none;
+    flex-direction:column;
+    min-width:180px;
+    box-shadow:0 0 20px #00f7ff;
+}
+
+.dropdown button{
+    padding:8px;
+    border:none;
+    background:#00f7ff;
+    border-radius:20px;
+    cursor:pointer;
+    font-weight:bold;
+}
+</style>
+
+<script>
+
+let user = JSON.parse(localStorage.getItem("googleUser"));
+
+if(!user){
+    window.location.href="signin.html";
+}else{
+
+document.getElementById("profileContainer").innerHTML = `
+    <img src="${user.picture}" onclick="toggleMenu()">
+    <div class="dropdown" id="dropdownMenu">
+        <strong>${user.name}</strong>
+        <small>${user.email}</small>
+        <br><br>
+        <button onclick="logout()">Logout</button>
+    </div>
+`;
+
+}
+
+function toggleMenu(){
+    let menu = document.getElementById("dropdownMenu");
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
+
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.href="signin.html";
+}
+
+</script>
 
 </body>
 </html>
+
 
