@@ -5,6 +5,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Metaverse | The Gaming Website</title>
 <link rel="icon" href="virtual-reality.png">
+<style>
+
+.profile-wrapper{
+    position:relative;
+    display:flex;
+    align-items:center;
+    cursor:pointer;
+}
+
+.profile-wrapper img{
+    width:42px;
+    border-radius:50%;
+    box-shadow:0 0 15px #00f7ff;
+    transition:0.3s;
+}
+
+.profile-wrapper img:hover{
+    transform:scale(1.1);
+}
+
+.dropdown-menu{
+    position:absolute;
+    top:60px;
+    right:0;
+    background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(15px);
+    padding:20px;
+    border-radius:15px;
+    min-width:220px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    box-shadow:0 0 25px #00f7ff;
+    opacity:0;
+    transform:translateY(-10px);
+    pointer-events:none;
+    transition:0.3s ease;
+}
+
+.dropdown-menu.active{
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+}
+
+.dropdown-menu strong{
+    font-size:16px;
+}
+
+.dropdown-menu small{
+    opacity:0.7;
+    font-size:12px;
+}
+
+.logout-btn{
+    padding:8px;
+    border:none;
+    border-radius:20px;
+    background:#00f7ff;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.logout-btn:hover{
+    box-shadow:0 0 15px #00f7ff;
+    transform:scale(1.05);
+}
+
+</style>
 
 <style>
 
@@ -202,10 +272,14 @@ footer{
         <a href="#sb">Subscribe</a>
         <a href="#ab">About</a>
     </nav>
-    <a href="signin.html" class="btn-signing">SIGN IN</a>
+   <a href="signin.html" class="btn-signing" id="signInBtn">SIGN IN</a>
+<div id="profileArea"></div>
+
     <div id="userProfile"></div>
     <div id="userArea"></div>
 <div class="profile-container" id="profileContainer"></div>
+    <div id="profileArea"></div>
+
 
 
 <script>
@@ -413,8 +487,113 @@ function logout(){
 }
 
 </script>
+<style>
+.profile-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.profile-box img{
+    width:40px;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 15px #00f7ff;
+}
+
+.logout-btn{
+    padding:6px 12px;
+    border:none;
+    border-radius:20px;
+    background:#00f7ff;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+</style>
+
+<script>
+
+// Get user from storage
+let user = JSON.parse(localStorage.getItem("googleUser"));
+
+let signInBtn = document.getElementById("signInBtn");
+let profileArea = document.getElementById("profileArea");
+
+if(user){
+
+    // Hide sign in button
+    signInBtn.style.display = "none";
+
+    // Show profile + logout
+    profileArea.innerHTML = `
+        <div class="profile-box">
+            <img src="${user.picture}" title="${user.name}">
+            <span>${user.name}</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    `;
+
+}else{
+    // Show sign in if not logged
+    signInBtn.style.display = "inline-block";
+}
+
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.reload();
+}
+
+</script>
+<script>
+
+let user = JSON.parse(localStorage.getItem("googleUser"));
+let signInBtn = document.getElementById("signInBtn");
+let profileArea = document.getElementById("profileArea");
+
+if(user){
+
+    signInBtn.style.display = "none";
+
+    profileArea.innerHTML = `
+        <div class="profile-wrapper" onclick="toggleDropdown(event)">
+            <img src="${user.picture}" alt="profile">
+            <div class="dropdown-menu" id="dropdownMenu">
+                <strong>${user.name}</strong>
+                <small>${user.email}</small>
+                <hr style="opacity:0.2;">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    `;
+
+}else{
+    signInBtn.style.display = "inline-block";
+}
+
+// Toggle dropdown
+function toggleDropdown(event){
+    event.stopPropagation();
+    document.getElementById("dropdownMenu").classList.toggle("active");
+}
+
+// Close when clicking outside
+document.addEventListener("click", function(){
+    let menu = document.getElementById("dropdownMenu");
+    if(menu){
+        menu.classList.remove("active");
+    }
+});
+
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.reload();
+}
+
+</script>
 
 </body>
 </html>
+
 
 
