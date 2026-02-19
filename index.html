@@ -377,6 +377,76 @@ img {
         text-align: center;
     }
 }
+/* ===== HEADER STYLE ===== */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background: #000;
+    color: white;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.nav {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+}
+
+#getStartedBtn {
+    padding: 8px 18px;
+    border: none;
+    background: #00f0ff;
+    color: black;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* Hide hamburger on desktop */
+.menu-toggle {
+    display: none;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+/* ===== MOBILE VERSION ===== */
+
+@media (max-width: 768px) {
+
+    .header {
+        padding: 15px 20px;
+    }
+
+    .nav {
+        position: absolute;
+        top: 70px;
+        right: 0;
+        background: #111;
+        width: 200px;
+        flex-direction: column;
+        padding: 20px;
+        display: none;
+    }
+
+    .nav.active {
+        display: flex;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+}
 
 </style>
 </head>
@@ -386,12 +456,16 @@ img {
 
 <header>
     <h1 class="logo">Metaverse</h1>
-    <nav>
-        <a href="#Game">Gaming</a>
-        <a href="#ft">Features</a>
-        <a href="#sb">Subscribe</a>
-        <a href="#ab">About</a>
+    <nav class="nav" id="navMenu">
+        <a href="#">Home</a>
+        <a href="#">Games</a>
+        <a href="#">About</a>
+        <button id="getStartedBtn">Get Started</button>
     </nav>
+
+    <div class="menu-toggle" id="menuToggle">
+        ☰
+    </div>
     <a href="signin.html" class="btn-signing" id="signInBtn">SIGN IN</a>
 <button class="btn-signing" id="logoutBtn" style="display:none;">LOGOUT</button>
 
@@ -813,8 +887,18 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 </script>
+    <script>
+const menuToggle = document.getElementById("menuToggle");
+const navMenu = document.getElementById("navMenu");
+
+menuToggle.addEventListener("click", () => {
+    navMenu.classList.toggle("active");
+});
+</script>
+
 </body>
 </html>
+
 
 
 
