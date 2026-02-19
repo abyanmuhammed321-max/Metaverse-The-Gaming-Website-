@@ -1124,18 +1124,40 @@ function addBotResponse(text) {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
+#chatToggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg,#00f2ff,#8f00ff);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 0 15px #00f2ff;
+}
+
 #chatSidebar {
   position: fixed;
-  right: 0;
+  right: -350px;
   top: 0;
   width: 320px;
   height: 100vh;
   background: #111;
-  box-shadow: -5px 0 20px rgba(0,255,255,0.4);
   display: flex;
   flex-direction: column;
-  z-index: 9999;
-  font-family: Arial;
+  transition: 0.4s ease;
+  z-index: 9998;
+  box-shadow: -5px 0 20px rgba(0,255,255,0.4);
+}
+
+#chatSidebar.active {
+  right: 0;
 }
 
 #chatHeader {
@@ -1143,30 +1165,29 @@ function addBotResponse(text) {
   padding: 15px;
   color: white;
   font-weight: bold;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+#closeChat {
+  cursor: pointer;
 }
 
 #messages {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
+  color: white;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: white;
 }
 
 .msg {
+  background: #222;
   padding: 8px;
   border-radius: 6px;
-  background: #222;
   font-size: 14px;
-}
-
-.self {
-  background: #00f2ff;
-  color: black;
-  align-self: flex-end;
 }
 
 #chatInputArea {
@@ -1177,8 +1198,8 @@ function addBotResponse(text) {
 
 #usernameInput {
   width: 100%;
-  margin-bottom: 5px;
   padding: 5px;
+  margin-bottom: 5px;
 }
 
 #messageInput {
@@ -1195,8 +1216,13 @@ function addBotResponse(text) {
 }
 </style>
 
+<div id="chatToggle">💬</div>
+
 <div id="chatSidebar">
-  <div id="chatHeader">Metaverse Live Chat</div>
+  <div id="chatHeader">
+    <span>Live Chat</span>
+    <span id="closeChat">✖</span>
+  </div>
   <input id="usernameInput" placeholder="Enter your name" />
   <div id="messages"></div>
   <div id="chatInputArea">
@@ -1206,7 +1232,6 @@ function addBotResponse(text) {
 </div>
 
 <script>
-// 🔥 PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyAbYdGXNR8TYCiP8Vdt__yCPpLwdn5dp2g",
   authDomain: "metaversechat-252ae.firebaseapp.com",
@@ -1216,15 +1241,28 @@ const firebaseConfig = {
   messagingSenderId: "211243702627",
   appId: "1:211243702627:web:5e1907c20f8fa0afa29b56"
 };
-
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-const messagesDiv = document.getElementById("messages");
+const toggle = document.getElementById("chatToggle");
+const sidebar = document.getElementById("chatSidebar");
+const closeBtn = document.getElementById("closeChat");
 const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const usernameInput = document.getElementById("usernameInput");
+const messagesDiv = document.getElementById("messages");
 
+// Toggle open
+toggle.onclick = () => {
+  sidebar.classList.add("active");
+};
+
+// Close
+closeBtn.onclick = () => {
+  sidebar.classList.remove("active");
+};
+
+// Send message
 sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keypress", e => {
   if (e.key === "Enter") sendMessage();
@@ -1235,28 +1273,38 @@ function sendMessage() {
   const message = messageInput.value.trim();
   if (!username || !message) return;
 
+  localStorage.setItem("chatUsername", username);
+
   database.ref("chat").push({
-    username: username,
-    message: message,
+    username,
+    message,
     timestamp: Date.now()
   });
 
   messageInput.value = "";
 }
 
-database.ref("chat").on("child_added", snapshot => {
-  const data = snapshot.val();
-  const msgDiv = document.createElement("div");
-  msgDiv.classList.add("msg");
-  msgDiv.innerHTML = "<strong>" + data.username + ":</strong> " + data.message;
+// Load saved username
+window.onload = () => {
+  const savedName = localStorage.getItem("chatUsername");
+  if (savedName) usernameInput.value = savedName;
+};
 
-  messagesDiv.appendChild(msgDiv);
+// Listen for new messages
+database.ref("chat").limitToLast(100).on("child_added", snapshot => {
+  const data = snapshot.val();
+  const msg = document.createElement("div");
+  msg.classList.add("msg");
+  msg.innerHTML = "<strong>" + data.username + ":</strong> " + data.message;
+  messagesDiv.appendChild(msg);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 </script>
 
+
 </body>
 </html>
+
 
 
 
