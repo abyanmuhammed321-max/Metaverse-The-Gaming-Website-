@@ -273,6 +273,7 @@ footer{
         <a href="#ab">About</a>
     </nav>
    <a href="signin.html" class="btn-signing" id="signInBtn">SIGN IN</a>
+    <button class="btn-signing" id="logoutBtn" style="display:none;" onclick="logout()">LOGOUT</button>
 <div id="profileArea"></div>
 
     <div id="userProfile"></div>
@@ -591,9 +592,34 @@ function logout(){
 }
 
 </script>
+<script>
+
+// Get stored Google user
+let user = JSON.parse(localStorage.getItem("googleUser"));
+
+let signInBtn = document.getElementById("signInBtn");
+let logoutBtn = document.getElementById("logoutBtn");
+
+// If user exists (logged in)
+if(user){
+    signInBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+}else{
+    signInBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+}
+
+// Logout function
+function logout(){
+    localStorage.removeItem("googleUser");
+    window.location.href = "signin.html";
+}
+
+</script>
 
 </body>
 </html>
+
 
 
 
