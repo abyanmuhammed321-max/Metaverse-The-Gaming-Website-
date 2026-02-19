@@ -1,165 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metaverse | The Gaming Website</title>
-    <link rel="icon" href="virtual-reality.png">
-    <link rel="stylesheet" href="style.css">
-    
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metaverse | The Gaming Website</title>
+<link rel="icon" href="virtual-reality.png">
 
-    /* Login Screen */
-    #loginScreen {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-    }
+<style>
 
-    /* Website Content */
-    #websiteContent {
-      display: none;
-      padding: 20px;
-    }
+/* ================= GLOBAL ================= */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
 
-    .logout-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: red;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+body{
+    overflow-x:hidden;
+    background: linear-gradient(-45deg, #0f0c29, #1a1a40, #000428, #004e92);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color:white;
+}
 
-    #profileBox {
-      margin-top: 20px;
-      text-align: center;
-    }
+@keyframes gradientBG{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
 
-    #profileBox img {
-      width: 70px;
-      border-radius: 50%;
-    }
-  </style>
-</head>
+/* ================= HEADER ================= */
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 60px;
+    backdrop-filter:blur(15px);
+    background:rgba(255,255,255,0.05);
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    position:fixed;
+    width:100%;
+    z-index:1000;
+}
 
-<body>
+.logo{
+    font-size:28px;
+    font-weight:bold;
+    background: linear-gradient(90deg,#00f7ff,#ff00ff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
 
-<!-- 🔐 LOGIN SCREEN -->
-<div id="loginScreen">
-  <h2>Login to Enter the Metaverse</h2>
+nav a{
+    margin:0 15px;
+    text-decoration:none;
+    color:white;
+    transition:0.3s;
+}
 
-  <div id="g_id_onload"
-       data-client_id="YOUR_GOOGLE_CLIENT_ID"
-       data-context="signin"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="false">
-  </div>
+nav a:hover{
+    color:#00f7ff;
+    text-shadow:0 0 10px #00f7ff;
+}
 
-  <div class="g_id_signin"
-       data-type="standard"
-       data-size="large"
-       data-theme="outline"
-       data-text="signin_with"
-       data-shape="rectangular"
-       data-logo_alignment="left">
-  </div>
-</div>
+/* ================= BUTTONS ================= */
+.btn-get-started,
+.btn-signing,
+.btn-signing-main{
+    padding:12px 25px;
+    border-radius:30px;
+    text-decoration:none;
+    font-weight:bold;
+    border:2px solid #00f7ff;
+    color:#00f7ff;
+    background:transparent;
+    transition:0.4s;
+}
 
-<!-- 🌍 WEBSITE CONTENT -->
-<div id="websiteContent">
+.btn-get-started:hover,
+.btn-signing:hover,
+.btn-signing-main:hover{
+    background:#00f7ff;
+    color:black;
+    box-shadow:0 0 20px #00f7ff,
+               0 0 40px #00f7ff,
+               0 0 60px #00f7ff;
+    transform:scale(1.05);
+}
 
-  <button class="logout-btn" onclick="logout()">Logout</button>
+/* ================= HERO ================= */
+main{
+    padding-top:150px;
+    padding-left:60px;
+}
 
-  <h1>Welcome to the Metaverse 🚀</h1>
+h1{
+    font-size:48px;
+    margin-bottom:20px;
+    text-shadow:0 0 20px #00f7ff;
+}
 
-  <div id="profileBox">
-    <img id="userImage">
-    <h3 id="userName"></h3>
-  </div>
+.tag{
+    display:inline-block;
+    padding:8px 18px;
+    border-radius:20px;
+    background:rgba(0,255,255,0.1);
+    border:1px solid #00f7ff;
+    margin-bottom:20px;
+    box-shadow:0 0 15px rgba(0,255,255,0.5);
+}
 
-  <!-- 🔥 YOUR REAL WEBSITE CONTENT BELOW -->
-  <p>This is your protected Metaverse Gaming Website content.</p>
-
-</div>
-
-<script>
-  function parseJwt(token) {
-    let base64Url = token.split('.')[1];
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  }
-
-  function handleCredentialResponse(response) {
-    const user = parseJwt(response.credential);
-    localStorage.setItem("user", JSON.stringify(user));
-    showWebsite(user);
-  }
-
-  function showWebsite(user) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("websiteContent").style.display = "block";
-
-    document.getElementById("userName").innerText = user.name;
-    document.getElementById("userImage").src = user.picture;
-  }
-
-  function logout() {
-    localStorage.removeItem("user");
-    location.reload();
-  }
-
-  // 🔐 Protect on page load
-  window.onload = function() {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      showWebsite(JSON.parse(savedUser));
-    } else {
-      document.getElementById("loginScreen").style.display = "flex";
-      document.getElementById("websiteContent").style.display = "none";
-    }
-  }
-</script>
-    <script>
-const cursor = document.querySelector(".cursor");
-document.addEventListener("mousemove", e=>{
-    cursor.style.left = e.clientX + "px";
-    cursor.style.top = e.clientY + "px";
-});
-</script>
-    
-     <style>
-             .images {
-            width: 8cm;
-            height: 4cm;
-            margin-left: 50px;
-            border-radius: 10%;
-        }
-        .images:hover {
-            color: blue;
-            background: blue;
-            box-shadow: 0 0 100px lightblue;
-        }
-      
-      .gfg{
+/* ================= GAME CARD ================= */
+.gfg{
     width:420px;
     border-radius:20px;
     background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
     border:1px solid rgba(255,255,255,0.1);
     padding:10px;
     transition:0.5s;
@@ -167,12 +124,143 @@ document.addEventListener("mousemove", e=>{
 }
 
 .gfg:hover{
-    transform: scale(1.1) rotateY(15deg);
+    transform: scale(1.08) rotateY(10deg);
     box-shadow:0 0 80px #00f7ff;
 }
 
-     </style>
-   <script>
+/* ================= FEATURE IMAGES ================= */
+.images{
+    width:200px;
+    height:120px;
+    margin:20px;
+    border-radius:15px;
+    transition:0.4s;
+}
+
+.images:hover{
+    transform:scale(1.1);
+    box-shadow:0 0 40px #00f7ff;
+}
+
+/* ================= INPUT ================= */
+input{
+    padding:12px 20px;
+    border-radius:25px;
+    border:none;
+    outline:none;
+    width:250px;
+    background:rgba(255,255,255,0.1);
+    color:white;
+    text-align:center;
+    backdrop-filter:blur(10px);
+}
+
+input::placeholder{
+    color:rgba(255,255,255,0.6);
+}
+
+/* ================= FOOTER ================= */
+footer{
+    padding:20px;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(10px);
+}
+
+/* ================= REVEAL ================= */
+.reveal{
+    opacity:0;
+    transform:translateY(50px);
+    transition:1s;
+}
+
+.reveal.active{
+    opacity:1;
+    transform:translateY(0);
+}
+
+/* ================= GALAXY CANVAS ================= */
+#galaxy{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="galaxy"></canvas>
+
+<header>
+    <h1 class="logo">Metaverse</h1>
+    <nav>
+        <a href="#Game">Gaming</a>
+        <a href="#ft">Features</a>
+        <a href="#sb">Subscribe</a>
+        <a href="#ab">About</a>
+    </nav>
+    <a href="signin.html" class="btn-signing">SIGN IN</a>
+</header>
+
+<main>
+    <div class="tag">Introducing Web 3.0</div>
+    <h1>Metaverse Gaming Experience</h1>
+    <p>Play Games In The Metaverse.</p>
+    <br>
+    <a href="#Game" class="btn-get-started">Play Games</a>
+    <a href="signin.html" class="btn-signing-main">Get Started</a>
+</main>
+
+<br><br><br>
+
+<center><h2 id="Game" class="reveal">Game</h2></center>
+<br>
+<center>
+<img class="gfg" src="https://imgs.crazygames.com/bloxdhop-io_16x9/20250829023851/bloxdhop-io_16x9-cover?metadata=none&quality=60&width=412">
+</center>
+<br>
+<center>
+<a class="btn-signing-main" href="https://bloxd.io/">Bloxd.io</a>
+</center>
+
+<br><br>
+<center><h2 id="ft" class="reveal">Features</h2></center>
+<br>
+<center>
+<img class="images" src="images.jfif">
+<img class="images" src="hello.jfif">
+<img class="images" src="ps5.jfif">
+<img class="images" src="html.jfif">
+</center>
+
+<br><br>
+<center><h2 id="sb" class="reveal">Subscribe</h2></center>
+<br>
+<center>
+<input type="email" placeholder="Enter your email">
+<br><br>
+<button class="btn-get-started" onclick="alert('You are Subscribed')">Subscribe</button>
+</center>
+
+<br><br>
+<center><h2 id="ab" class="reveal">About Us</h2></center>
+<br>
+<center>
+<p style="width:60%;">
+We are a team of passionate gamers and developers dedicated to creating immersive gaming experiences in the metaverse.
+</p>
+</center>
+
+<br><br>
+<center>
+<footer>@Metaverse 2026 made by Abyan Muhammed</footer>
+</center>
+
+<!-- ================= GALAXY SCRIPT ================= -->
+<script>
 const canvas = document.getElementById("galaxy");
 const ctx = canvas.getContext("2d");
 
@@ -192,134 +280,31 @@ for(let i=0;i<150;i++){
 
 function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
     ctx.fillStyle="white";
     stars.forEach(star=>{
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.radius,0,Math.PI*2);
         ctx.fill();
-
         star.y += star.speed;
-        if(star.y > canvas.height){
-            star.y = 0;
-        }
+        if(star.y > canvas.height){ star.y = 0; }
     });
-
     requestAnimationFrame(animate);
 }
 animate();
-</script>
-  
-</head>
-<body>
-    <audio id="bgSound" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6f5e9b44a5.mp3?filename=space-ambient-110624.mp3" type="audio/mpeg">
-</audio>
 
-
-
-<script>
-const sound = document.getElementById("bgSound");
-
-function toggleSound(){
-    if(sound.paused){
-        sound.play();
-    }else{
-        sound.pause();
-    }
-}
-</script>
-
-    <div class="cursor"></div>
-
-    <canvas id="galaxy"></canvas>
-
-    <div class="layer-blur"></div>
-
-    <div class="container">    
-<header>
-    <h1 class="logo">Metaverse</h1>
-
-    <nav>
-        <a href="#Game">Gaming</a>
-        <a href="#ft">Features</a>
-        <a href="#sb">Subscribe</a> 
-        <a href="#ab">About Us</a>
-    </nav>
-
-    <a href="signin.html" class="btn-signing" onclick="loginTransition()">SIGN IN</a>
-
-     <script>
-function loginTransition(){
-    document.body.style.transition="1s";
-    document.body.style.opacity="0";
-}
-</script>
-
-</header>
-
-
-        <main>
-          <div class="content">
-            <div class="tag-box">
-                <div class="tag">Interducing &wedbar;</div>
-
-                <h1><br>Metaverse Gaming Experience</h1>
-
-                <p class="description">
-                     Play Games In The Metaverse.
-                </p>
-
-                <div class="buttons">
-                    <a href="#Game" class="btn-get-started">PlayGames </a>
-                    <a href="signin.html" class="btn-signing-main">GetStarted</a>
-
-                </div>
-            </div>
-          </div>
-        </main>
-
-
-       
- </div>
-           <spline-viewer class="robot-3d" url="https://prod.spline.design/kslZv5XHyEmjlo6T/scene.splinecode"></spline-viewer>
-    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.53/build/spline-viewer.js"></script>
-  <script>
+/* Reveal Animation */
 function revealOnScroll(){
     const reveals = document.querySelectorAll(".reveal");
-
     reveals.forEach(el=>{
         const windowHeight = window.innerHeight;
         const elementTop = el.getBoundingClientRect().top;
-
         if(elementTop < windowHeight - 100){
             el.classList.add("active");
         }
     });
 }
-
 window.addEventListener("scroll", revealOnScroll);
 </script>
 
-</section>
-    <center><h2 id="Game" class="reveal">Game</h2>
-</center>
-    <center><img class="gfg" src="https://imgs.crazygames.com/bloxdhop-io_16x9/20250829023851/bloxdhop-io_16x9-cover?metadata=none&amp;quality=60&amp;width=412"></center><br>
-
-   <center><a class="btn-signing-main" href="https://bloxd.io/">Bloxd.io</a></center><br><br>
-    
-   <center><h2 id="ft">Features</h2></center><br>
-   <img class="images" src="images.jfif" alt="Image with glow effect"> <img class="images" src="hello.jfif"> <img class="images" src="ps5.jfif">  <img class="images" src="html.jfif" alt="Image with glow effect"> 
-   
-
-   <center><h1 id="sb">Subscribe</h1></center><br>
- <center><input type="email" placeholder="Enter your email"></center>
-<center><button class="btn-get-started" onclick="alert('You are Subscribed')">Subscribe</button></center><br>
-    <center><h2 id="ab">About Us</h2></center><br>
-   <center><p class="description">
-        We are a team of passionate gamers and developers dedicated to creating immersive gaming experiences in the metaverse. Our mission is to push the boundaries of gaming technology and provide players with unforgettable adventures in virtual worlds.
-    </p></center><br><br>   
-   <center><footer class="description">@Metaverse 2026 made by Abyan Muhammed </footer></center>
 </body>
-
 </html>
