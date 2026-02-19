@@ -1119,7 +1119,7 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -1128,25 +1128,27 @@ function addBotResponse(text) {
   position: fixed;
   right: 20px;
   bottom: 20px;
-  width: 60px;
-  height: 60px;
+  width: 65px;
+  height: 65px;
   background: linear-gradient(45deg,#00f2ff,#8f00ff);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 26px;
   color: white;
-  font-size: 24px;
   cursor: pointer;
   z-index: 9999;
-  box-shadow: 0 0 15px #00f2ff;
+  box-shadow: 0 0 20px #00f2ff;
+  transition: 0.3s;
 }
+#chatToggle:hover { transform: scale(1.1); }
 
 #chatSidebar {
   position: fixed;
   right: -350px;
   top: 0;
-  width: 320px;
+  width: 340px;
   height: 100vh;
   background: #111;
   display: flex;
@@ -1155,10 +1157,7 @@ function addBotResponse(text) {
   z-index: 9998;
   box-shadow: -5px 0 20px rgba(0,255,255,0.4);
 }
-
-#chatSidebar.active {
-  right: 0;
-}
+#chatSidebar.active { right: 0; }
 
 #chatHeader {
   background: linear-gradient(45deg,#00f2ff,#8f00ff);
@@ -1169,8 +1168,8 @@ function addBotResponse(text) {
   justify-content: space-between;
 }
 
-#closeChat {
-  cursor: pointer;
+#onlineCount {
+  font-size: 12px;
 }
 
 #messages {
@@ -1188,6 +1187,21 @@ function addBotResponse(text) {
   padding: 8px;
   border-radius: 6px;
   font-size: 14px;
+  position: relative;
+}
+
+.time {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.deleteBtn {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  font-size: 10px;
+  cursor: pointer;
+  color: red;
 }
 
 #chatInputArea {
@@ -1220,11 +1234,16 @@ function addBotResponse(text) {
 
 <div id="chatSidebar">
   <div id="chatHeader">
-    <span>Live Chat</span>
-    <span id="closeChat">✖</span>
+    <div>
+      Live Chat
+      <div id="onlineCount">Online: 0</div>
+    </div>
+    <span id="closeChat" style="cursor:pointer;">✖</span>
   </div>
+
   <input id="usernameInput" placeholder="Enter your name" />
   <div id="messages"></div>
+
   <div id="chatInputArea">
     <input id="messageInput" placeholder="Type message..." />
     <button id="sendBtn">Send</button>
@@ -1232,6 +1251,7 @@ function addBotResponse(text) {
 </div>
 
 <script>
+// 🔥 PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyAbYdGXNR8TYCiP8Vdt__yCPpLwdn5dp2g",
   authDomain: "metaversechat-252ae.firebaseapp.com",
@@ -1241,8 +1261,9 @@ const firebaseConfig = {
   messagingSenderId: "211243702627",
   appId: "1:211243702627:web:5e1907c20f8fa0afa29b56"
 };
+
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const db = firebase.database();
 
 const toggle = document.getElementById("chatToggle");
 const sidebar = document.getElementById("chatSidebar");
@@ -1251,21 +1272,22 @@ const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const usernameInput = document.getElementById("usernameInput");
 const messagesDiv = document.getElementById("messages");
+const onlineCount = document.getElementById("onlineCount");
 
-// Toggle open
-toggle.onclick = () => {
-  sidebar.classList.add("active");
-};
+toggle.onclick = () => sidebar.classList.add("active");
+closeBtn.onclick = () => sidebar.classList.remove("active");
 
-// Close
-closeBtn.onclick = () => {
-  sidebar.classList.remove("active");
-};
-
-// Send message
 sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keypress", e => {
   if (e.key === "Enter") sendMessage();
+});
+
+const userId = Date.now();
+db.ref("onlineUsers/" + userId).set(true);
+db.ref("onlineUsers/" + userId).onDisconnect().remove();
+
+db.ref("onlineUsers").on("value", snapshot => {
+  onlineCount.innerText = "Online: " + snapshot.numChildren();
 });
 
 function sendMessage() {
@@ -1273,37 +1295,49 @@ function sendMessage() {
   const message = messageInput.value.trim();
   if (!username || !message) return;
 
-  localStorage.setItem("chatUsername", username);
-
-  database.ref("chat").push({
+  const msgRef = db.ref("chat").push();
+  msgRef.set({
     username,
     message,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    userId
   });
 
   messageInput.value = "";
 }
 
-// Load saved username
 window.onload = () => {
   const savedName = localStorage.getItem("chatUsername");
   if (savedName) usernameInput.value = savedName;
 };
 
-// Listen for new messages
-database.ref("chat").limitToLast(100).on("child_added", snapshot => {
+db.ref("chat").limitToLast(100).on("child_added", snapshot => {
   const data = snapshot.val();
   const msg = document.createElement("div");
   msg.classList.add("msg");
-  msg.innerHTML = "<strong>" + data.username + ":</strong> " + data.message;
+
+  const time = new Date(data.timestamp).toLocaleTimeString();
+
+  msg.innerHTML =
+    "<strong>" + data.username + ":</strong> " + data.message +
+    "<div class='time'>" + time + "</div>";
+
+  if (data.userId === userId) {
+    const del = document.createElement("span");
+    del.classList.add("deleteBtn");
+    del.innerText = "X";
+    del.onclick = () => snapshot.ref.remove();
+    msg.appendChild(del);
+  }
+
   messagesDiv.appendChild(msg);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 </script>
 
-
 </body>
 </html>
+
 
 
 
