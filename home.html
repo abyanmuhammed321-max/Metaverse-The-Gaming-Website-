@@ -449,171 +449,7 @@ img {
 }
 
 </style>
-    <!-- Sidebar Chat Box -->
-<style>
-  /* Sidebar container */
-  #chatSidebar {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: 300px;
-    background: #222;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 9999;
-  }
-  #chatSidebar.open {
-    transform: translateX(0);
-  }
 
-  /* Header */
-  #chatHeader {
-    padding: 10px;
-    background: #111;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #chatHeader button {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-  }
-
-  /* Messages container */
-  #chatMessages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    background: #333;
-  }
-  .message {
-    margin-bottom: 8px;
-    padding: 6px 10px;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-  }
-  .message.friend {
-    background: #4a90e2;
-    align-self: flex-start;
-  }
-  .message.me {
-    background: #7ed321;
-    align-self: flex-end;
-  }
-
-  /* Input area */
-  #chatInputArea {
-    display: flex;
-    border-top: 1px solid #444;
-  }
-  #chatInput {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    background: #222;
-    color: white;
-  }
-  #chatSendBtn {
-    background: #4a90e2;
-    border: none;
-    color: white;
-    padding: 0 16px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  /* Toggle button */
-  #chatToggleBtn {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    background: #4a90e2;
-    border: none;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 24px;
-    cursor: pointer;
-    font-weight: bold;
-    z-index: 10000;
-  }
-</style>
-
-<div id="chatSidebar" aria-label="Chat sidebar" role="region" aria-hidden="true">
-  <div id="chatHeader">
-    Chat
-    <button id="chatCloseBtn" aria-label="Close chat sidebar">&times;</button>
-  </div>
-  <div id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
-  <form id="chatForm" autocomplete="off" aria-label="Send message form">
-    <div id="chatInputArea">
-      <input type="text" id="chatInput" placeholder="Type a message..." aria-label="Message input" required />
-      <button type="submit" id="chatSendBtn" aria-label="Send message">Send</button>
-    </div>
-  </form>
-</div>
-
-<button id="chatToggleBtn" aria-label="Open chat sidebar">Chat</button>
-
-<script>
-  (function(){
-    const sidebar = document.getElementById('chatSidebar');
-    const toggleBtn = document.getElementById('chatToggleBtn');
-    const closeBtn = document.getElementById('chatCloseBtn');
-    const messagesEl = document.getElementById('chatMessages');
-    const form = document.getElementById('chatForm');
-    const input = document.getElementById('chatInput');
-
-    // Toggle sidebar open/close
-    function openSidebar() {
-      sidebar.classList.add('open');
-      sidebar.setAttribute('aria-hidden', 'false');
-      input.focus();
-    }
-    function closeSidebar() {
-      sidebar.classList.remove('open');
-      sidebar.setAttribute('aria-hidden', 'true');
-    }
-
-    toggleBtn.addEventListener('click', openSidebar);
-    closeBtn.addEventListener('click', closeSidebar);
-
-    // Add message to chat
-    function addMessage(text, sender) {
-      const msg = document.createElement('div');
-      msg.classList.add('message', sender);
-      msg.textContent = text;
-      messagesEl.appendChild(msg);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    // Handle form submit
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      const text = input.value.trim();
-      if(!text) return;
-      addMessage(text, 'me');
-      input.value = '';
-
-      // Simulate friend reply after 1 second (you can replace this with your own logic)
-      setTimeout(() => {
-        addMessage("Friend: " + text, 'friend');
-      }, 1000);
-    });
-  })();
-</script>
 
 </head>
 <body>
@@ -1310,9 +1146,175 @@ db.ref("chat").limitToLast(100).on("child_added", snapshot => {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 </script>
+<!-- Sidebar Chat Box -->
+<style>
+  /* Sidebar container */
+  #chatSidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    width: 300px;
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 9999;
+  }
+  #chatSidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Header */
+  #chatHeader {
+    padding: 10px;
+    background: #111;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatHeader button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  /* Messages container */
+  #chatMessages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #333;
+  }
+  .message {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+  .message.friend {
+    background: #4a90e2;
+    align-self: flex-start;
+  }
+  .message.me {
+    background: #7ed321;
+    align-self: flex-end;
+  }
+
+  /* Input area */
+  #chatInputArea {
+    display: flex;
+    border-top: 1px solid #444;
+  }
+  #chatInput {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background: #222;
+    color: white;
+  }
+  #chatSendBtn {
+    background: #4a90e2;
+    border: none;
+    color: white;
+    padding: 0 16px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  /* Toggle button */
+  #chatToggleBtn {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    background: #4a90e2;
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10000;
+  }
+</style>
+
+<div id="chatSidebar" aria-label="Chat sidebar" role="region" aria-hidden="true">
+  <div id="chatHeader">
+    Chat
+    <button id="chatCloseBtn" aria-label="Close chat sidebar">&times;</button>
+  </div>
+  <div id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
+  <form id="chatForm" autocomplete="off" aria-label="Send message form">
+    <div id="chatInputArea">
+      <input type="text" id="chatInput" placeholder="Type a message..." aria-label="Message input" required />
+      <button type="submit" id="chatSendBtn" aria-label="Send message">Send</button>
+    </div>
+  </form>
+</div>
+
+<button id="chatToggleBtn" aria-label="Open chat sidebar">Chat</button>
+
+<script>
+  (function(){
+    const sidebar = document.getElementById('chatSidebar');
+    const toggleBtn = document.getElementById('chatToggleBtn');
+    const closeBtn = document.getElementById('chatCloseBtn');
+    const messagesEl = document.getElementById('chatMessages');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
+
+    // Toggle sidebar open/close
+    function openSidebar() {
+      sidebar.classList.add('open');
+      sidebar.setAttribute('aria-hidden', 'false');
+      input.focus();
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      sidebar.setAttribute('aria-hidden', 'true');
+    }
+
+    toggleBtn.addEventListener('click', openSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+
+    // Add message to chat
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.textContent = text;
+      messagesEl.appendChild(msg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Handle form submit
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      const text = input.value.trim();
+      if(!text) return;
+      addMessage(text, 'me');
+      input.value = '';
+
+      // Simulate friend reply after 1 second (you can replace this with your own logic)
+      setTimeout(() => {
+        addMessage("Friend: " + text, 'friend');
+      }, 1000);
+    });
+  })();
+</script>
 
 </body>
 </html>
+
 
 
 
