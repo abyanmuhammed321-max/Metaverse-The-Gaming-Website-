@@ -931,7 +931,7 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- ===== WHATSAPP STYLE SIDEBAR CHAT ===== -->
+<!-- ===== WHATSAPP STYLE FRIENDS CHAT FIXED ===== -->
 
 <div id="wa-toggle">💬</div>
 
@@ -951,88 +951,27 @@ function addBotResponse(text) {
 </div>
 
 <style>
-#wa-toggle{
- position:fixed;bottom:20px;right:20px;
- background:#25D366;color:white;
- padding:15px;border-radius:50%;
- cursor:pointer;z-index:9999;font-size:20px
-}
-
-#wa-sidebar{
- position:fixed;top:0;right:-360px;
- width:350px;height:100%;
- background:#ece5dd;
- display:flex;flex-direction:column;
- transition:.3s;font-family:Arial;
- box-shadow:-4px 0 15px rgba(0,0,0,.2);
- z-index:9998
-}
-
+#wa-toggle{position:fixed;bottom:20px;right:20px;background:#25D366;color:white;padding:15px;border-radius:50%;cursor:pointer;z-index:9999;font-size:20px}
+#wa-sidebar{position:fixed;top:0;right:-360px;width:350px;height:100%;background:#ece5dd;display:flex;flex-direction:column;transition:.3s;font-family:Arial;box-shadow:-4px 0 15px rgba(0,0,0,.2);z-index:9998}
 #wa-sidebar.open{right:0}
-
-#wa-header{
- background:#075e54;color:white;
- padding:12px;display:flex;
- justify-content:space-between;
- align-items:center
-}
-
-#wa-users{
- background:#fff;padding:8px;
- max-height:120px;overflow-y:auto;
- border-bottom:1px solid #ddd
-}
-
-.user-item{
- padding:6px;cursor:pointer;
- border-bottom:1px solid #eee
-}
-
+#wa-header{background:#075e54;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center}
+#wa-users{background:#fff;padding:8px;max-height:120px;overflow-y:auto;border-bottom:1px solid #ddd}
+.user-item{padding:6px;cursor:pointer;border-bottom:1px solid #eee}
 .user-item:hover{background:#f2f2f2}
-
-#wa-messages{
- flex:1;padding:10px;
- overflow-y:auto;background:#e5ddd5
-}
-
-.msg{
- max-width:70%;padding:8px;
- margin:6px 0;border-radius:8px;
- font-size:14px
-}
-
-.me{
- background:#dcf8c6;margin-left:auto
-}
-
-.other{
- background:#fff
-}
-
-#wa-input-area{
- display:flex;background:#f0f0f0;
- padding:6px
-}
-
-#wa-input{
- flex:1;padding:8px;
- border:none;border-radius:20px;
- outline:none
-}
-
-#wa-send{
- background:#25D366;border:none;
- color:white;padding:8px 15px;
- border-radius:50%;margin-left:6px;
- cursor:pointer
-}
+#wa-messages{flex:1;padding:10px;overflow-y:auto;background:#e5ddd5}
+.msg{max-width:70%;padding:8px;margin:6px 0;border-radius:8px;font-size:14px}
+.me{background:#dcf8c6;margin-left:auto}
+.other{background:#fff}
+#wa-input-area{display:flex;background:#f0f0f0;padding:6px}
+#wa-input{flex:1;padding:8px;border:none;border-radius:20px;outline:none}
+#wa-send{background:#25D366;border:none;color:white;padding:8px 15px;border-radius:50%;margin-left:6px;cursor:pointer}
 </style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp }
+import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ==== YOUR FIREBASE CONFIG ==== */
@@ -1042,7 +981,7 @@ const firebaseConfig = {
   projectId: "side-bar-chat-app",
   storageBucket: "side-bar-chat-app.firebasestorage.app",
   messagingSenderId: "358332042325",
-  appId: "1:358332042325:web:17e2abb7e99f6e841718dc"
+  appId: "1:358332042325:web:17e2abb7e99f6e841718dc",
 };
 /* ============================== */
 
@@ -1068,31 +1007,15 @@ loginBtn.onclick=()=>{
  signInWithPopup(auth,provider);
 };
 
-onAuthStateChanged(auth,user=>{
- if(user){
-   currentUser=user;
-   loginBtn.innerText=user.displayName;
+function privateRoom(id1,id2){return [id1,id2].sort().join("_")}
 
-   setDoc(doc(db,"onlineUsers",user.uid),{
-     name:user.displayName,
-     uid:user.uid
-   });
-
-   loadUsers();
- }
-});
-
-function privateRoom(id1,id2){
- return [id1,id2].sort().join("_");
-}
-
+// ONLINE USERS & PRESENCE
 function loadUsers(){
  onSnapshot(collection(db,"onlineUsers"),snap=>{
    usersDiv.innerHTML="";
    snap.forEach(d=>{
      const data=d.data();
      if(data.uid===currentUser.uid) return;
-
      const div=document.createElement("div");
      div.className="user-item";
      div.innerText=data.name;
@@ -1105,6 +1028,7 @@ function loadUsers(){
  });
 }
 
+// LOAD MESSAGES
 function loadMessages(room){
  const q=query(collection(db,"rooms",room,"messages"),orderBy("created"));
  onSnapshot(q,snap=>{
@@ -1120,24 +1044,42 @@ function loadMessages(room){
  });
 }
 
+// SEND MESSAGE
 sendBtn.onclick=async ()=>{
  if(!currentRoom){alert("Select a user first");return;}
  if(!input.value) return;
-
  await addDoc(collection(db,"rooms",currentRoom,"messages"),{
    text:input.value,
    uid:currentUser.uid,
    created:serverTimestamp()
  });
-
  input.value="";
 };
+
+// LOGIN STATE
+onAuthStateChanged(auth,user=>{
+ if(user){
+   currentUser=user;
+   loginBtn.innerText=user.displayName;
+
+   // SAVE ONLINE USER
+   setDoc(doc(db,"onlineUsers",user.uid),{
+     name:user.displayName,
+     uid:user.uid
+   });
+
+   // REMOVE FROM ONLINE ON LOGOUT/EXIT
+   window.addEventListener("beforeunload",()=>{
+     deleteDoc(doc(db,"onlineUsers",user.uid));
+   });
+
+   loadUsers();
+ }
+});
 </script>
-
-<!-- ===== END CHAT ===== -->
-
 </body>
 </html>
+
 
 
 
