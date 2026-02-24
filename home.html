@@ -931,173 +931,304 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<style>
-/* ===== Floating Button ===== */
-#chat-toggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #6c2bd9;
-  color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 20px;
-  z-index: 9999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-/* ===== Sidebar ===== */
-#chat-sidebar {
-  position: fixed;
-  top: 0;
-  right: -400px;
-  width: 350px;
-  height: 100%;
-  background: #1e1e2f;
-  box-shadow: -4px 0 20px rgba(0,0,0,0.4);
-  transition: right 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  z-index: 9998;
-}
-
-#chat-sidebar.open {
-  right: 0;
-}
-
-/* ===== Header ===== */
-#chat-header {
-  background: #6c2bd9;
-  padding: 15px;
-  color: white;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* ===== Messages ===== */
-#chat-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  font-family: Arial, sans-serif;
-  color: white;
-}
-
-.message {
-  margin: 8px 0;
-  padding: 10px;
-  border-radius: 10px;
-  max-width: 80%;
-}
-
-.user {
-  background: #4a4a6a;
-  align-self: flex-end;
-}
-
-.bot {
-  background: #2d2d44;
-  align-self: flex-start;
-}
-
-/* ===== Input Area ===== */
-#chat-input-area {
-  display: flex;
-  border-top: 1px solid #333;
-}
-
-#chat-input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  outline: none;
-  background: #2d2d44;
-  color: white;
-}
-
-#send-btn {
-  background: #6c2bd9;
-  border: none;
-  color: white;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-
-/* ===== Mobile ===== */
-@media (max-width: 500px) {
-  #chat-sidebar {
-    width: 100%;
-  }
-}
-</style>
-</head>
-<body>
-
-<button id="chat-toggle">💬</button>
+<!-- WHATSAPP CLONE CHAT SIDEBAR -->
+<div id="chat-toggle">💬</div>
 
 <div id="chat-sidebar">
-  <div id="chat-header">Chat Support</div>
+  <div id="chat-header">
+    <span>Chat with Friends</span>
+    <button id="login-btn">Login</button>
+    <button id="theme-toggle">🌙</button>
+  </div>
+
+  <div id="users-list"></div>
   <div id="chat-messages"></div>
-  <div id="chat-input-area">
-    <input type="text" id="chat-input" placeholder="Type a message...">
-    <button id="send-btn">Send</button>
+
+  <div id="typing-status"></div>
+
+  <div id="input-area">
+    <input type="file" id="image-upload" accept="image/*">
+    <button id="mic-btn">🎤</button>
+    <input id="chat-input" placeholder="Type a message">
+    <button id="send-btn">➤</button>
   </div>
 </div>
 
-<script>
+<audio id="recv-sound">
+  <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
+</audio>
+
+<style>
+/* 🌐 BASIC STYLES */
+#chat-toggle {
+  position: fixed; bottom: 15px; right: 18px;
+  background: #25D366; color: white;
+  padding: 12px; border-radius: 50%;
+  cursor: pointer; z-index: 9999;
+}
+#chat-sidebar {
+  position: fixed; top: 0; right: -380px;
+  width: 360px; height: 100%; background: #ece5dd;
+  display: flex; flex-direction: column;
+  transition: .3s; font-family: Arial; z-index:9998;
+}
+#chat-sidebar.open { right: 0; }
+
+/* HEADER */
+#chat-header{
+  background:#075e54; color:white;
+  padding:10px; display:flex;
+  justify-content:space-between; align-items:center;
+}
+
+/* USERS LIST */
+#users-list {
+  background:white; max-height:120px;
+  overflow-y:auto; border-bottom:1px solid #ddd;
+}
+.user-item {
+  padding:8px; cursor:pointer; border-bottom:1px solid #eee;
+  display:flex; align-items:center; gap:8px;
+}
+.user-item img { width:30px; height:30px; border-radius:50%; }
+
+/* MESSAGES */
+#chat-messages {
+  flex:1; padding:10px; overflow-y:auto; background:#e5ddd5;
+}
+.msg {
+  margin:6px 0; padding:8px; position:relative;
+  border-radius:8px; font-size:14px;
+  max-width:70%;
+}
+.me { background:#dcf8c6; margin-left:auto; }
+.other { background:white; }
+.msg-time {
+  font-size:10px; color:#666;
+  position:absolute; bottom:2px; right:6px;
+}
+
+/* INPUT AREA */
+#input-area {
+  display:flex; padding:8px; background:#f0f0f0;
+}
+#chat-input {
+  flex:1; border:none; padding:8px; border-radius:20px;
+  outline:none; margin-right:6px;
+}
+#send-btn, #mic-btn {
+  background:#25D366; border:none; color:white;
+  padding:8px 13px; border-radius:50%; cursor:pointer;
+}
+
+#typing-status { padding:4px 10px; font-size:12px; color:#555; }
+</style>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore, collection, doc, setDoc, onSnapshot, addDoc, serverTimestamp,
+  query, orderBy, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+/* ==== FIREBASE CONFIG ==== */
+const firebaseConfig = {
+ apiKey: "AIzaSyDi7-PgRefp_uJWIwUXVYOzZObInxkuCIs",
+  authDomain: "side-eae4e.firebaseapp.com",
+  projectId: "side-eae4e",
+  storageBucket: "side-eae4e.firebasestorage.app",
+  messagingSenderId: "999699084915",
+  appId: "1:999699084915:web:dd1b66219bc9d3f9dfdc06"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+/* UTILS — AES encryption */
+async function genKey(){ 
+  let pass = prompt("Enter encryption key (keep secret!)");
+  return crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(pass),
+    { name: "AES-GCM" }, false, ["encrypt","decrypt"]
+  );
+}
+async function encrypt(msg, key){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(msg);
+  const cipher = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, enc);
+  return {iv: Array.from(iv), data: Array.from(new Uint8Array(cipher))};
+}
+async function decrypt(obj, key){
+  let iv = new Uint8Array(obj.iv);
+  let data = new Uint8Array(obj.data);
+  let dec = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, data);
+  return new TextDecoder().decode(dec);
+}
+
+/* STATES */
+let currentUser=null;
+let currentRoom=null;
+let aesKey=null;
+
+/* UI ELEMENTS */
 const toggleBtn = document.getElementById("chat-toggle");
 const sidebar = document.getElementById("chat-sidebar");
+const loginBtn = document.getElementById("login-btn");
+const usersDiv = document.getElementById("users-list");
+const messagesDiv = document.getElementById("chat-messages");
+const inputEl = document.getElementById("chat-input");
 const sendBtn = document.getElementById("send-btn");
-const input = document.getElementById("chat-input");
-const messages = document.getElementById("chat-messages");
+const typingStatus = document.getElementById("typing-status");
+const recvSound = document.getElementById("recv-sound");
+const imageUpload = document.getElementById("image-upload");
+const micBtn = document.getElementById("mic-btn");
 
-toggleBtn.onclick = () => {
-  sidebar.classList.toggle("open");
+/* OPEN/CLOSE */
+toggleBtn.onclick = ()=> sidebar.classList.toggle("open");
+
+/* LOGIN */
+loginBtn.onclick = ()=> {
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider);
 };
 
-function addMessage(text, sender) {
-  const msg = document.createElement("div");
-  msg.classList.add("message", sender);
-  msg.innerText = text;
-  messages.appendChild(msg);
-  messages.scrollTop = messages.scrollHeight;
+/* SAVE ONLINE USER */
+function saveOnline(user){
+  setDoc(doc(db,"onlineUsers",user.uid),{
+    uid: user.uid, name: user.displayName, photoURL: user.photoURL
+  });
+  window.addEventListener("beforeunload",()=> deleteDoc(doc(db,"onlineUsers",user.uid)));
 }
 
-async function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-
-  addMessage(text, "user");
-  input.value = "";
-
-  // ===== Replace this with your backend API =====
-  try {
-    const response = await fetch("/chat-api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+/* LOAD ONLINE USERS */
+function loadUsers(){
+  onSnapshot(collection(db,"onlineUsers"), snap => {
+    usersDiv.innerHTML = "";
+    snap.forEach(d => {
+      const u = d.data();
+      if(u.uid === currentUser.uid) return;
+      const div = document.createElement("div");
+      div.className="user-item";
+      div.innerHTML=`<img src="${u.photoURL}"><span>${u.name}</span>`;
+      div.onclick = ()=>{
+        currentRoom = [currentUser.uid,u.uid].sort().join("_");
+        loadMessages(currentRoom);
+      };
+      usersDiv.appendChild(div);
     });
-
-    const data = await response.json();
-    addMessage(data.reply, "bot");
-
-  } catch (err) {
-    addMessage("Server not connected.", "bot");
-  }
+  });
 }
 
-sendBtn.onclick = sendMessage;
+/* LOAD MESSAGES */
+function loadMessages(room){
+  const msgsCol = collection(db,"rooms",room,"messages");
+  const q = query(msgsCol, orderBy("created"));
+  onSnapshot(q, async snap => {
+    messagesDiv.innerHTML = "";
+    snap.forEach(async d => {
+      const m = d.data();
+      let text = "";
+      if(m.encrypted) {
+        try{ text = await decrypt(m.encrypted, aesKey); } catch(e){ text="[Encrypted]" }
+      }
+      const div = document.createElement("div");
+      div.className="msg "+(m.uid===currentUser.uid?"me":"other");
+      if(m.imageURL){
+        const img = document.createElement("img");
+        img.src = m.imageURL;
+        img.style.maxWidth="200px";
+        div.appendChild(img);
+      }
+      div.insertAdjacentHTML("beforeend", `<div>${text}</div><div class="msg-time">${new Date(m.created.seconds*1000).toLocaleTimeString() }</div>`);
+      messagesDiv.appendChild(div);
+      if(m.uid!==currentUser.uid) recvSound.play();
+    });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
 
-input.addEventListener("keypress", function(e) {
-  if (e.key === "Enter") sendMessage();
+/* SEND MESSAGE */
+sendBtn.onclick = async()=>{
+  if(!currentRoom) return alert("Select friend!");
+  let text = inputEl.value; if(!text) return;
+  let encObj = null;
+  if(aesKey) encObj = await encrypt(text, aesKey);
+  await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+    uid: currentUser.uid,
+    created: serverTimestamp(),
+    ...(encObj?{encrypted: encObj}:{text})
+  });
+  inputEl.value="";
+};
+
+/* IMAGE UPLOAD */
+imageUpload.onchange = async ()=>{
+  if(!currentRoom) return alert("Select friend!");
+  const file = imageUpload.files[0];
+  const ref = storageRef(storage, "images/"+Date.now()+"_"+file.name);
+  await uploadBytes(ref,file);
+  const url = await getDownloadURL(ref);
+  await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+    uid: currentUser.uid,
+    imageURL: url,
+    created: serverTimestamp()
+  });
+  imageUpload.value="";
+};
+
+/* VOICE RECORDING */
+let recorder, audioChunks=[];
+micBtn.onclick =()=> {
+  if(!recorder){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e=> audioChunks.push(e.data);
+      recorder.onstop = async()=>{
+        const blob = new Blob(audioChunks);
+        audioChunks=[];
+        const ref = storageRef(storage,"voices/"+Date.now()+".webm");
+        await uploadBytes(ref,blob);
+        const url = await getDownloadURL(ref);
+        await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+          uid: currentUser.uid,
+          voiceURL: url,
+          created: serverTimestamp()
+        });
+      };
+      recorder.start();
+      micBtn.innerText="⏹️";
+    });
+  } else {
+    recorder.stop(); recorder=null;
+    micBtn.innerText="🎤";
+  }
+};
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    currentUser=user;
+    loginBtn.innerText = user.displayName;
+    saveOnline(user);
+    loadUsers();
+  }
 });
+
 </script>
 
 </body>
 </body>
 </html>
+
 
 
 
