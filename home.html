@@ -1478,14 +1478,7 @@ function addBotResponse(text) {
   const aiSend = document.getElementById('aiSend');
   const aiModeText = document.getElementById('aiModeText');
   const aiConnText = document.getElementById('aiConnText');
-const aiApiKeyInput = document.getElementById('aiApiKey');
-let aiApiKey = "";
-
-// Save API key when user types (optionally you can use localStorage)
-aiApiKeyInput.addEventListener('input', (e) => {
-  aiApiKey = e.target.value.trim();
-  console.log("API Key set:", aiApiKey ? "[HIDDEN]" : "none"); // for debug only
-});
+  
   function openAI(){
     aiSidebar.dataset.open = "true";
     aiOverlay.dataset.open = "true";
@@ -1586,6 +1579,7 @@ aiApiKeyInput.addEventListener('input', (e) => {
 </body>
 </body>
 </html>
+
 
 
 
