@@ -447,198 +447,174 @@ img {
         display: block;
     }
 }
-#chat-container {
-  position: fixed;
-  bottom: 0;
-  right: 20px;
-  width: 300px;
-  font-family: Arial, sans-serif;
-  z-index: 9999;
-}
-
-#chat-window {
-  height: 300px;
-  background: #111;
-  border: 2px solid #444;
-  overflow-y: auto;
-  padding: 10px;
-  border-radius: 6px 6px 0 0;
-  color: #fff;
-}
-
-#messages {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.message {
-  background: #222;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.self {
-  background: #0b84ff;
-  align-self: flex-end;
-}
-
-#chat-input-area {
-  display: flex;
-  gap: 4px;
-  background: #222;
-  padding: 8px;
-  border-radius: 0 0 6px 6px;
-}
-
-#chat-input {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #444;
-  border-radius: 4px;
-  background: #111;
-  color: #fff;
-}
-
-#send-btn {
-  padding: 6px 10px;
-  border: none;
-  background: #0b84ff;
-  color: white;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-#send-btn:hover {
-  background: #076ddb;
-}
-/* Floating Button */
-#chat-toggle {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(45deg, #00f2ff, #8f00ff);
-  color: white;
-  font-size: 26px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 0 15px #00f2ff;
-  z-index: 9999;
-  transition: 0.3s;
-}
-
-#chat-toggle:hover {
-  transform: scale(1.1);
-}
-
-/* Chat Box */
-#chat-box {
-  position: fixed;
-  bottom: 100px;
-  right: 25px;
-  width: 320px;
-  height: 420px;
-  background: #111;
-  border-radius: 12px;
-  box-shadow: 0 0 20px #00f2ff;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-  animation: fadeIn 0.3s ease-in-out;
-  z-index: 9999;
-}
-
-@keyframes fadeIn {
-  from {opacity: 0; transform: translateY(20px);}
-  to {opacity: 1; transform: translateY(0);}
-}
-
-/* Header */
-#chat-header {
-  background: linear-gradient(45deg, #00f2ff, #8f00ff);
-  padding: 10px;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-}
-
-#close-chat {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-/* Messages */
-#chat-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: white;
-}
-
-.message {
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  max-width: 75%;
-  animation: slideIn 0.2s ease-in-out;
-}
-
-@keyframes slideIn {
-  from {opacity: 0; transform: translateX(-10px);}
-  to {opacity: 1; transform: translateX(0);}
-}
-
-.self {
-  background: #00f2ff;
-  align-self: flex-end;
-  color: black;
-}
-
-.bot {
-  background: #333;
-  align-self: flex-start;
-}
-
-/* Input */
-#chat-input-area {
-  display: flex;
-  padding: 8px;
-  background: #1a1a1a;
-}
-
-#chat-input {
-  flex: 1;
-  padding: 6px;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-}
-
-#send-btn {
-  margin-left: 6px;
-  padding: 6px 10px;
-  border: none;
-  background: #00f2ff;
-  color: black;
-  border-radius: 6px;
-  cursor: pointer;
-}
 
 </style>
+    <!-- Sidebar Chat Box -->
+<style>
+  /* Sidebar container */
+  #chatSidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    width: 300px;
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 9999;
+  }
+  #chatSidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Header */
+  #chatHeader {
+    padding: 10px;
+    background: #111;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatHeader button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  /* Messages container */
+  #chatMessages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #333;
+  }
+  .message {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+  .message.friend {
+    background: #4a90e2;
+    align-self: flex-start;
+  }
+  .message.me {
+    background: #7ed321;
+    align-self: flex-end;
+  }
+
+  /* Input area */
+  #chatInputArea {
+    display: flex;
+    border-top: 1px solid #444;
+  }
+  #chatInput {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background: #222;
+    color: white;
+  }
+  #chatSendBtn {
+    background: #4a90e2;
+    border: none;
+    color: white;
+    padding: 0 16px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  /* Toggle button */
+  #chatToggleBtn {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    background: #4a90e2;
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10000;
+  }
+</style>
+
+<div id="chatSidebar" aria-label="Chat sidebar" role="region" aria-hidden="true">
+  <div id="chatHeader">
+    Chat
+    <button id="chatCloseBtn" aria-label="Close chat sidebar">&times;</button>
+  </div>
+  <div id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
+  <form id="chatForm" autocomplete="off" aria-label="Send message form">
+    <div id="chatInputArea">
+      <input type="text" id="chatInput" placeholder="Type a message..." aria-label="Message input" required />
+      <button type="submit" id="chatSendBtn" aria-label="Send message">Send</button>
+    </div>
+  </form>
+</div>
+
+<button id="chatToggleBtn" aria-label="Open chat sidebar">Chat</button>
+
+<script>
+  (function(){
+    const sidebar = document.getElementById('chatSidebar');
+    const toggleBtn = document.getElementById('chatToggleBtn');
+    const closeBtn = document.getElementById('chatCloseBtn');
+    const messagesEl = document.getElementById('chatMessages');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
+
+    // Toggle sidebar open/close
+    function openSidebar() {
+      sidebar.classList.add('open');
+      sidebar.setAttribute('aria-hidden', 'false');
+      input.focus();
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      sidebar.setAttribute('aria-hidden', 'true');
+    }
+
+    toggleBtn.addEventListener('click', openSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+
+    // Add message to chat
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.textContent = text;
+      messagesEl.appendChild(msg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Handle form submit
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      const text = input.value.trim();
+      if(!text) return;
+      addMessage(text, 'me');
+      input.value = '';
+
+      // Simulate friend reply after 1 second (you can replace this with your own logic)
+      setTimeout(() => {
+        addMessage("Friend: " + text, 'friend');
+      }, 1000);
+    });
+  })();
+</script>
+
 </head>
 <body>
 
@@ -1337,6 +1313,7 @@ db.ref("chat").limitToLast(100).on("child_added", snapshot => {
 
 </body>
 </html>
+
 
 
 
