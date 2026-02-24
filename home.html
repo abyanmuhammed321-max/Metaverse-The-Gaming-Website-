@@ -1468,6 +1468,15 @@ function addBotResponse(text) {
 </aside>
 
 <script>
+      // Paste your AI API endpoint URL here (replace with your actual endpoint)
+  window.NEON_AI_ENDPOINT = "https://platform.openai.com/settings/proj_qygupj4sMQzGETsX3QBQZElK/api-keys;"
+
+  // Optional: provide context about your game/site to the AI
+  window.NEON_AI_CONTEXT = {
+    game: "Ai",
+    vibe: "competitive",
+    features: ["builds", "patch notes", "guides"]
+  };
   const aiFab = document.getElementById('aiFab');
   const aiSidebar = document.getElementById('aiSidebar');
   const aiOverlay = document.getElementById('aiOverlay');
@@ -1580,6 +1589,7 @@ function addBotResponse(text) {
 </body>
 </body>
 </html>
+
 
 
 
