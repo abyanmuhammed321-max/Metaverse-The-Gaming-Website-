@@ -1479,11 +1479,6 @@ function addBotResponse(text) {
   const aiModeText = document.getElementById('aiModeText');
   const aiConnText = document.getElementById('aiConnText');
   const aiApiKeyInput = document.getElementById('aiApiKey');
-  let aiApiKey = "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";
-
-aiApiKeyInput.addEventListener('input', (e) => {
-  aiApiKey = e.target.value.trim();
-  console.log("API Key set:", aiApiKey ? "[HIDDEN]" : "none");
 });
   function openAI(){
     aiSidebar.dataset.open = "true";
@@ -1494,6 +1489,12 @@ aiApiKeyInput.addEventListener('input', (e) => {
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
   }
+let aiApiKey = "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";
+
+aiApiKeyInput.addEventListener('input', (e) => {
+  aiApiKey = e.target.value.trim();
+  console.log("API Key set:", aiApiKey ? "[HIDDEN]" : "none")
+    
   function closeAI(){
     aiSidebar.dataset.open = "false";
     aiOverlay.dataset.open = "false";
@@ -1585,6 +1586,7 @@ aiApiKeyInput.addEventListener('input', (e) => {
 </body>
 </body>
 </html>
+
 
 
 
