@@ -9,6 +9,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="icon" href="virtual-reality.png">
+    <!-- Add this inside your <head> -->
+<style>
+  :root {
+    --primary-color: #7b5cff;
+    --background: #1e1e2f;
+    --sidebar-width: 350px;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--background);
+    color: #eee;
+  }
+
+  /* Sidebar container */
+  #chatSidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    background: #2a2a3d;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 10000;
+  }
+  #chatSidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Header */
+  #chatHeader {
+    background: var(--primary-color);
+    padding: 16px;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatHeader button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* Messages container */
+  #chatMessages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: #1e1e2f;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .message {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .message.me {
+    background: var(--primary-color);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .message.friend {
+    background: #44475a;
+    color: #ddd;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .message .meta {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* Input area */
+  #chatInputArea {
+    display: flex;
+    padding: 12px 16px;
+    background: #2a2a3d;
+    border-top: 1px solid #44475a;
+  }
+  #chatInput {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 30px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background: #44475a;
+    color: white;
+    transition: background 0.3s ease;
+  }
+  #chatInput::placeholder {
+    color: #bbb;
+  }
+  #chatInput:focus {
+    background: #5a5aff;
+  }
+  #chatSendBtn {
+    margin-left: 12px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 30px;
+    padding: 0 20px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  #chatSendBtn:hover {
+    background: #5a5aff;
+  }
+
+  /* Toggle button */
+  #chatToggleBtn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    padding: 14px 22px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(123, 92, 255, 0.6);
+    z-index: 10001;
+    transition: background 0.3s ease;
+  }
+  #chatToggleBtn:hover {
+    background: #5a5aff;
+  }
+
+  /* Scrollbar styling */
+  #chatMessages::-webkit-scrollbar {
+    width: 8px;
+  }
+  #chatMessages::-webkit-scrollbar-track {
+    background: #1e1e2f;
+  }
+  #chatMessages::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+  }
+</style>
     <style>
 
 .user-wrapper{
@@ -931,326 +1096,10 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<style>
-#chatToggle {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 65px;
-  height: 65px;
-  background: linear-gradient(45deg,#00f2ff,#8f00ff);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  color: white;
-  cursor: pointer;
-  z-index: 9999;
-  box-shadow: 0 0 20px #00f2ff;
-  transition: 0.3s;
-}
-#chatToggle:hover { transform: scale(1.1); }
-
-#chatSidebar {
-  position: fixed;
-  right: -350px;
-  top: 0;
-  width: 340px;
-  height: 100vh;
-  background: #111;
-  display: flex;
-  flex-direction: column;
-  transition: 0.4s ease;
-  z-index: 9998;
-  box-shadow: -5px 0 20px rgba(0,255,255,0.4);
-}
-#chatSidebar.active { right: 0; }
-
-#chatHeader {
-  background: linear-gradient(45deg,#00f2ff,#8f00ff);
-  padding: 15px;
-  color: white;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-}
-
-#onlineCount {
-  font-size: 12px;
-}
-
-#messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.msg {
-  background: #222;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  position: relative;
-}
-
-.time {
-  font-size: 10px;
-  opacity: 0.6;
-}
-
-.deleteBtn {
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  font-size: 10px;
-  cursor: pointer;
-  color: red;
-}
-
-#chatInputArea {
-  display: flex;
-  padding: 10px;
-  background: #1a1a1a;
-}
-
-#usernameInput {
-  width: 100%;
-  padding: 5px;
-  margin-bottom: 5px;
-}
-
-#messageInput {
-  flex: 1;
-  padding: 6px;
-}
-
-#sendBtn {
-  padding: 6px 10px;
-  margin-left: 5px;
-  background: #00f2ff;
-  border: none;
-  cursor: pointer;
-}
-</style>
-
-<div id="chatToggle">💬</div>
-
-<div id="chatSidebar">
-  <div id="chatHeader">
-    <div>
-      Live Chat
-      <div id="onlineCount">Online: 0</div>
-    </div>
-    <span id="closeChat" style="cursor:pointer;">✖</span>
-  </div>
-
-  <input id="usernameInput" placeholder="Enter your name" />
-  <div id="messages"></div>
-
-  <div id="chatInputArea">
-    <input id="messageInput" placeholder="Type message..." />
-    <button id="sendBtn">Send</button>
-  </div>
-</div>
-
-<script>
-// 🔥 PASTE YOUR FIREBASE CONFIG HERE
-const firebaseConfig = {
-  apiKey: "AIzaSyAbYdGXNR8TYCiP8Vdt__yCPpLwdn5dp2g",
-  authDomain: "metaversechat-252ae.firebaseapp.com",
-  databaseURL: "https://metaversechat-252ae-default-rtdb.firebaseio.com",
-  projectId: "metaversechat-252ae",
-  storageBucket: "metaversechat-252ae.firebasestorage.app",
-  messagingSenderId: "211243702627",
-  appId: "1:211243702627:web:5e1907c20f8fa0afa29b56"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-const toggle = document.getElementById("chatToggle");
-const sidebar = document.getElementById("chatSidebar");
-const closeBtn = document.getElementById("closeChat");
-const sendBtn = document.getElementById("sendBtn");
-const messageInput = document.getElementById("messageInput");
-const usernameInput = document.getElementById("usernameInput");
-const messagesDiv = document.getElementById("messages");
-const onlineCount = document.getElementById("onlineCount");
-
-toggle.onclick = () => sidebar.classList.add("active");
-closeBtn.onclick = () => sidebar.classList.remove("active");
-
-sendBtn.onclick = sendMessage;
-messageInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendMessage();
-});
-
-const userId = Date.now();
-db.ref("onlineUsers/" + userId).set(true);
-db.ref("onlineUsers/" + userId).onDisconnect().remove();
-
-db.ref("onlineUsers").on("value", snapshot => {
-  onlineCount.innerText = "Online: " + snapshot.numChildren();
-});
-
-function sendMessage() {
-  const username = usernameInput.value.trim();
-  const message = messageInput.value.trim();
-  if (!username || !message) return;
-
-  const msgRef = db.ref("chat").push();
-  msgRef.set({
-    username,
-    message,
-    timestamp: Date.now(),
-    userId
-  });
-
-  messageInput.value = "";
-}
-
-window.onload = () => {
-  const savedName = localStorage.getItem("chatUsername");
-  if (savedName) usernameInput.value = savedName;
-};
-
-db.ref("chat").limitToLast(100).on("child_added", snapshot => {
-  const data = snapshot.val();
-  const msg = document.createElement("div");
-  msg.classList.add("msg");
-
-  const time = new Date(data.timestamp).toLocaleTimeString();
-
-  msg.innerHTML =
-    "<strong>" + data.username + ":</strong> " + data.message +
-    "<div class='time'>" + time + "</div>";
-
-  if (data.userId === userId) {
-    const del = document.createElement("span");
-    del.classList.add("deleteBtn");
-    del.innerText = "X";
-    del.onclick = () => snapshot.ref.remove();
-    msg.appendChild(del);
-  }
-
-  messagesDiv.appendChild(msg);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
-</script>
-<!-- Sidebar Chat Box -->
-<style>
-  /* Sidebar container */
-  #chatSidebar {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: 300px;
-    background: #222;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 9999;
-  }
-  #chatSidebar.open {
-    transform: translateX(0);
-  }
-
-  /* Header */
-  #chatHeader {
-    padding: 10px;
-    background: #111;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #chatHeader button {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-  }
-
-  /* Messages container */
-  #chatMessages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    background: #333;
-  }
-  .message {
-    margin-bottom: 8px;
-    padding: 6px 10px;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-  }
-  .message.friend {
-    background: #4a90e2;
-    align-self: flex-start;
-  }
-  .message.me {
-    background: #7ed321;
-    align-self: flex-end;
-  }
-
-  /* Input area */
-  #chatInputArea {
-    display: flex;
-    border-top: 1px solid #444;
-  }
-  #chatInput {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    background: #222;
-    color: white;
-  }
-  #chatSendBtn {
-    background: #4a90e2;
-    border: none;
-    color: white;
-    padding: 0 16px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  /* Toggle button */
-  #chatToggleBtn {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    background: #4a90e2;
-    border: none;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 24px;
-    cursor: pointer;
-    font-weight: bold;
-    z-index: 10000;
-  }
-</style>
-
+<!-- Chat Sidebar HTML -->
 <div id="chatSidebar" aria-label="Chat sidebar" role="region" aria-hidden="true">
   <div id="chatHeader">
-    Chat
+    Chat with Friends
     <button id="chatCloseBtn" aria-label="Close chat sidebar">&times;</button>
   </div>
   <div id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
@@ -1264,8 +1113,27 @@ db.ref("chat").limitToLast(100).on("child_added", snapshot => {
 
 <button id="chatToggleBtn" aria-label="Open chat sidebar">Chat</button>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
   (function(){
+    // Your Firebase configuration (replace with your own Firebase project config)
+    const firebaseConfig = {
+  apiKey: "AIzaSyAZgiiynxDqpmRTIi3egtREov-HuMg31FE",
+  authDomain: "side-bar-chat-app.firebaseapp.com",
+  projectId: "side-bar-chat-app",
+  storageBucket: "side-bar-chat-app.firebasestorage.app",
+  messagingSenderId: "358332042325",
+  appId: "1:358332042325:web:17e2abb7e99f6e841718dc",
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Elements
     const sidebar = document.getElementById('chatSidebar');
     const toggleBtn = document.getElementById('chatToggleBtn');
     const closeBtn = document.getElementById('chatCloseBtn');
@@ -1273,7 +1141,15 @@ db.ref("chat").limitToLast(100).on("child_added", snapshot => {
     const form = document.getElementById('chatForm');
     const input = document.getElementById('chatInput');
 
-    // Toggle sidebar open/close
+    // User identification (simple prompt for demo)
+    let username = localStorage.getItem('chat_username');
+    if(!username){
+      username = prompt('Enter your chat name:', 'Friend_' + Math.floor(Math.random()*1000));
+      if(!username) username = 'Anonymous';
+      localStorage.setItem('chat_username', username);
+    }
+
+    // Open/close sidebar
     function openSidebar() {
       sidebar.classList.add('open');
       sidebar.setAttribute('aria-hidden', 'false');
@@ -1283,37 +1159,65 @@ db.ref("chat").limitToLast(100).on("child_added", snapshot => {
       sidebar.classList.remove('open');
       sidebar.setAttribute('aria-hidden', 'true');
     }
-
     toggleBtn.addEventListener('click', openSidebar);
     closeBtn.addEventListener('click', closeSidebar);
 
-    // Add message to chat
-    function addMessage(text, sender) {
+    // Add message to chat UI
+    function addMessage(data) {
       const msg = document.createElement('div');
-      msg.classList.add('message', sender);
-      msg.textContent = text;
+      msg.classList.add('message');
+      msg.classList.add(data.username === username ? 'me' : 'friend');
+      msg.innerHTML = `
+        <div>${escapeHtml(data.text)}</div>
+        <div class="meta">${escapeHtml(data.username)} • ${new Date(data.timestamp?.toDate ? data.timestamp.toDate() : data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
       messagesEl.appendChild(msg);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // Handle form submit
-    form.addEventListener('submit', function(e){
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Listen for new messages in Firestore in real-time
+    db.collection('chat_messages')
+      .orderBy('timestamp')
+      .limit(100)
+      .onSnapshot(snapshot => {
+        messagesEl.innerHTML = '';
+        snapshot.forEach(doc => {
+          addMessage(doc.data());
+        });
+      });
+
+    // Send message
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const text = input.value.trim();
       if(!text) return;
-      addMessage(text, 'me');
       input.value = '';
-
-      // Simulate friend reply after 1 second (you can replace this with your own logic)
-      setTimeout(() => {
-        addMessage("Friend: " + text, 'friend');
-      }, 1000);
+      try {
+        await db.collection('chat_messages').add({
+          text,
+          username,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        alert('Error sending message: ' + err.message);
+      }
     });
+
+    // Optional: open chat if URL hash is #chat
+    if(location.hash === '#chat') openSidebar();
   })();
 </script>
 
 </body>
 </html>
+
 
 
 
