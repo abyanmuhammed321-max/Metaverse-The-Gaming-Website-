@@ -1085,20 +1085,31 @@ function privateRoomId(uid1,uid2){
 }
 
 sendBtn.onclick = async ()=>{
+  console.log("Send clicked");
+
   const text = document.getElementById("chat-input").value;
-  const roomInput = document.getElementById("chat-room").value;
+  console.log("Message:", text);
 
-  if(roomInput && roomInput==="global") currentRoom="global";
+  if(!currentUser){
+    alert("You are not logged in!");
+    return;
+  }
 
-  if(!text || !currentUser) return;
+  if(!text){
+    alert("Message empty");
+    return;
+  }
 
-  await addDoc(collection(db,"rooms",currentRoom,"messages"),{
-    name:currentUser.displayName,
-    text,
-    created:serverTimestamp()
-  });
-
-  document.getElementById("chat-input").value="";
+  try{
+    await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+      name:currentUser.displayName,
+      text,
+      created:serverTimestamp()
+    });
+    document.getElementById("chat-input").value="";
+  }catch(e){
+    console.error("Error sending:", e);
+  }
 };
 
 function loadRoom(room){
@@ -1122,6 +1133,7 @@ function loadRoom(room){
 
 </body>
 </html>
+
 
 
 
