@@ -931,92 +931,111 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- ===== ADVANCED REAL FRIEND SIDEBAR CHAT ===== -->
+<!-- ===== WHATSAPP STYLE SIDEBAR CHAT ===== -->
 
-<div id="chat-toggle">💬</div>
+<div id="wa-toggle">💬</div>
 
-<div id="chat-sidebar">
-  <div id="chat-header">
+<div id="wa-sidebar">
+  <div id="wa-header">
     <span>Friends Chat</span>
-    <button id="login-btn">Login</button>
+    <button id="wa-login">Login</button>
   </div>
 
-  <div id="user-panel">
-    <div><strong>Online Users</strong></div>
-    <div id="users"></div>
-  </div>
+  <div id="wa-users"></div>
+  <div id="wa-messages"></div>
 
-  <div id="chat-messages"></div>
-
-  <div id="chat-input-area">
-    <input type="text" id="chat-room" placeholder="Room (global or username)">
-    <input type="text" id="chat-input" placeholder="Type message...">
-    <button id="chat-send">Send</button>
+  <div id="wa-input-area">
+    <input id="wa-input" placeholder="Type a message">
+    <button id="wa-send">➤</button>
   </div>
 </div>
 
-<audio id="notif-sound">
-  <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
-</audio>
-
 <style>
-#chat-toggle{
+#wa-toggle{
  position:fixed;bottom:20px;right:20px;
- background:#6c2bd9;color:white;
+ background:#25D366;color:white;
  padding:15px;border-radius:50%;
- cursor:pointer;z-index:9999
+ cursor:pointer;z-index:9999;font-size:20px
 }
-#chat-sidebar{
+
+#wa-sidebar{
  position:fixed;top:0;right:-360px;
- width:340px;height:100%;
- background:#0f172a;color:white;
+ width:350px;height:100%;
+ background:#ece5dd;
  display:flex;flex-direction:column;
- transition:.3s;font-family:Arial;z-index:9998
+ transition:.3s;font-family:Arial;
+ box-shadow:-4px 0 15px rgba(0,0,0,.2);
+ z-index:9998
 }
-#chat-sidebar.open{right:0}
-#chat-header{
- background:#6c2bd9;padding:10px;
- display:flex;justify-content:space-between
+
+#wa-sidebar.open{right:0}
+
+#wa-header{
+ background:#075e54;color:white;
+ padding:12px;display:flex;
+ justify-content:space-between;
+ align-items:center
 }
-#user-panel{
- background:#111827;padding:8px;
+
+#wa-users{
+ background:#fff;padding:8px;
  max-height:120px;overflow-y:auto;
- font-size:13px
+ border-bottom:1px solid #ddd
 }
-#chat-messages{
- flex:1;overflow-y:auto;padding:10px;
+
+.user-item{
+ padding:6px;cursor:pointer;
+ border-bottom:1px solid #eee
+}
+
+.user-item:hover{background:#f2f2f2}
+
+#wa-messages{
+ flex:1;padding:10px;
+ overflow-y:auto;background:#e5ddd5
+}
+
+.msg{
+ max-width:70%;padding:8px;
+ margin:6px 0;border-radius:8px;
  font-size:14px
 }
-.message{
- margin:6px 0;padding:8px;
- background:#1f2937;border-radius:8px
+
+.me{
+ background:#dcf8c6;margin-left:auto
 }
-#chat-input-area{
- padding:8px;background:#111827;
- display:flex;flex-direction:column
+
+.other{
+ background:#fff
 }
-#chat-input-area input{
- margin:4px 0;padding:6px;
- border:none;border-radius:6px
+
+#wa-input-area{
+ display:flex;background:#f0f0f0;
+ padding:6px
 }
-#chat-send{
- background:#6c2bd9;border:none;
- padding:8px;color:white;border-radius:6px
+
+#wa-input{
+ flex:1;padding:8px;
+ border:none;border-radius:20px;
+ outline:none
 }
-.user-item{
- cursor:pointer;padding:3px 0
+
+#wa-send{
+ background:#25D366;border:none;
+ color:white;padding:8px 15px;
+ border-radius:50%;margin-left:6px;
+ cursor:pointer
 }
-.user-item:hover{color:#6c2bd9}
 </style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } 
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, query, orderBy, serverTimestamp }
+import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ====== YOUR FIREBASE CONFIG ====== */
+/* ==== YOUR FIREBASE CONFIG ==== */
 const firebaseConfig = {
   apiKey: "AIzaSyAZgiiynxDqpmRTIi3egtREov-HuMg31FE",
   authDomain: "side-bar-chat-app.firebaseapp.com",
@@ -1025,114 +1044,101 @@ const firebaseConfig = {
   messagingSenderId: "358332042325",
   appId: "1:358332042325:web:17e2abb7e99f6e841718dc"
 };
-/* =================================== */
+/* ============================== */
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const toggle = document.getElementById("chat-toggle");
-const sidebar = document.getElementById("chat-sidebar");
-const loginBtn = document.getElementById("login-btn");
-const usersDiv = document.getElementById("users");
-const messagesDiv = document.getElementById("chat-messages");
-const sendBtn = document.getElementById("chat-send");
-const notif = document.getElementById("notif-sound");
+let currentUser=null;
+let currentRoom=null;
 
-let currentUser = null;
-let currentRoom = "global";
+const toggle=document.getElementById("wa-toggle");
+const sidebar=document.getElementById("wa-sidebar");
+const loginBtn=document.getElementById("wa-login");
+const usersDiv=document.getElementById("wa-users");
+const messagesDiv=document.getElementById("wa-messages");
+const sendBtn=document.getElementById("wa-send");
+const input=document.getElementById("wa-input");
 
-toggle.onclick = () => sidebar.classList.toggle("open");
+toggle.onclick=()=>sidebar.classList.toggle("open");
 
-loginBtn.onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+loginBtn.onclick=()=>{
+ const provider=new GoogleAuthProvider();
+ signInWithPopup(auth,provider);
 };
 
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    currentUser = user;
-    loginBtn.innerText = user.displayName;
-    await setDoc(doc(db,"onlineUsers",user.uid),{
-      name:user.displayName,
-      uid:user.uid
-    });
-    loadUsers();
-    loadRoom("global");
-  }
+onAuthStateChanged(auth,user=>{
+ if(user){
+   currentUser=user;
+   loginBtn.innerText=user.displayName;
+
+   setDoc(doc(db,"onlineUsers",user.uid),{
+     name:user.displayName,
+     uid:user.uid
+   });
+
+   loadUsers();
+ }
 });
 
+function privateRoom(id1,id2){
+ return [id1,id2].sort().join("_");
+}
+
 function loadUsers(){
-  onSnapshot(collection(db,"onlineUsers"),(snap)=>{
-    usersDiv.innerHTML="";
-    snap.forEach(doc=>{
-      const data = doc.data();
-      const div = document.createElement("div");
-      div.classList.add("user-item");
-      div.innerText=data.name;
-      div.onclick=()=>{
-        currentRoom = privateRoomId(currentUser.uid,data.uid);
-        document.getElementById("chat-room").value=data.name;
-        loadRoom(currentRoom);
-      };
-      usersDiv.appendChild(div);
-    });
-  });
+ onSnapshot(collection(db,"onlineUsers"),snap=>{
+   usersDiv.innerHTML="";
+   snap.forEach(d=>{
+     const data=d.data();
+     if(data.uid===currentUser.uid) return;
+
+     const div=document.createElement("div");
+     div.className="user-item";
+     div.innerText=data.name;
+     div.onclick=()=>{
+       currentRoom=privateRoom(currentUser.uid,data.uid);
+       loadMessages(currentRoom);
+     };
+     usersDiv.appendChild(div);
+   });
+ });
 }
 
-function privateRoomId(uid1,uid2){
-  return [uid1,uid2].sort().join("_");
+function loadMessages(room){
+ const q=query(collection(db,"rooms",room,"messages"),orderBy("created"));
+ onSnapshot(q,snap=>{
+   messagesDiv.innerHTML="";
+   snap.forEach(d=>{
+     const data=d.data();
+     const div=document.createElement("div");
+     div.className="msg "+(data.uid===currentUser.uid?"me":"other");
+     div.innerText=data.text;
+     messagesDiv.appendChild(div);
+   });
+   messagesDiv.scrollTop=messagesDiv.scrollHeight;
+ });
 }
 
-sendBtn.onclick = async ()=>{
-  console.log("Send clicked");
+sendBtn.onclick=async ()=>{
+ if(!currentRoom){alert("Select a user first");return;}
+ if(!input.value) return;
 
-  const text = document.getElementById("chat-input").value;
-  console.log("Message:", text);
+ await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+   text:input.value,
+   uid:currentUser.uid,
+   created:serverTimestamp()
+ });
 
-  if(!currentUser){
-    alert("You are not logged in!");
-    return;
-  }
-
-  if(!text){
-    alert("Message empty");
-    return;
-  }
-
-  try{
-    await addDoc(collection(db,"rooms",currentRoom,"messages"),{
-      name:currentUser.displayName,
-      text,
-      created:serverTimestamp()
-    });
-    document.getElementById("chat-input").value="";
-  }catch(e){
-    console.error("Error sending:", e);
-  }
+ input.value="";
 };
-
-function loadRoom(room){
-  const q = query(collection(db,"rooms",room,"messages"),orderBy("created"));
-  onSnapshot(q,(snap)=>{
-    messagesDiv.innerHTML="";
-    snap.forEach(doc=>{
-      const data=doc.data();
-      const div=document.createElement("div");
-      div.classList.add("message");
-      div.innerHTML=`<strong>${data.name}:</strong> ${data.text}`;
-      messagesDiv.appendChild(div);
-      notif.play();
-    });
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
-  });
-}
 </script>
 
-<!-- ===== END CHAT ===== --> 
+<!-- ===== END CHAT ===== -->
 
 </body>
 </html>
+
 
 
 
