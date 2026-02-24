@@ -931,7 +931,7 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- ===== WHATSAPP STYLE FRIENDS CHAT FIXED ===== -->
+<!-- ===== FULL WHATSAPP STYLE CHAT ===== -->
 
 <div id="wa-toggle">💬</div>
 
@@ -944,11 +944,17 @@ function addBotResponse(text) {
   <div id="wa-users"></div>
   <div id="wa-messages"></div>
 
+  <div id="wa-typing" style="padding:4px 10px;font-size:12px;color:#555"></div>
+
   <div id="wa-input-area">
     <input id="wa-input" placeholder="Type a message">
     <button id="wa-send">➤</button>
   </div>
 </div>
+
+<audio id="notif-sound">
+  <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
+</audio>
 
 <style>
 #wa-toggle{position:fixed;bottom:20px;right:20px;background:#25D366;color:white;padding:15px;border-radius:50%;cursor:pointer;z-index:9999;font-size:20px}
@@ -956,34 +962,35 @@ function addBotResponse(text) {
 #wa-sidebar.open{right:0}
 #wa-header{background:#075e54;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center}
 #wa-users{background:#fff;padding:8px;max-height:120px;overflow-y:auto;border-bottom:1px solid #ddd}
-.user-item{padding:6px;cursor:pointer;border-bottom:1px solid #eee}
+.user-item{padding:6px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:6px}
+.user-item img{width:28px;height:28px;border-radius:50%}
 .user-item:hover{background:#f2f2f2}
 #wa-messages{flex:1;padding:10px;overflow-y:auto;background:#e5ddd5}
-.msg{max-width:70%;padding:8px;margin:6px 0;border-radius:8px;font-size:14px}
+.msg{max-width:70%;padding:8px;margin:6px 0;border-radius:8px;font-size:14px;position:relative}
 .me{background:#dcf8c6;margin-left:auto}
 .other{background:#fff}
+.msg-time{font-size:10px;color:#666;position:absolute;bottom:2px;right:6px}
 #wa-input-area{display:flex;background:#f0f0f0;padding:6px}
 #wa-input{flex:1;padding:8px;border:none;border-radius:20px;outline:none}
 #wa-send{background:#25D366;border:none;color:white;padding:8px 15px;border-radius:50%;margin-left:6px;cursor:pointer}
+#wa-typing{height:16px}
 </style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ==== YOUR FIREBASE CONFIG ==== */
+/* ==== FIREBASE CONFIG ==== */
 const firebaseConfig = {
-  apiKey: "AIzaSyAZgiiynxDqpmRTIi3egtREov-HuMg31FE",
+   apiKey: "AIzaSyAZgiiynxDqpmRTIi3egtREov-HuMg31FE",
   authDomain: "side-bar-chat-app.firebaseapp.com",
   projectId: "side-bar-chat-app",
   storageBucket: "side-bar-chat-app.firebasestorage.app",
   messagingSenderId: "358332042325",
-  appId: "1:358332042325:web:17e2abb7e99f6e841718dc",
+  appId: "1:358332042325:web:17e2abb7e99f6e841718dc"
 };
-/* ============================== */
+/* ======================== */
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -991,25 +998,27 @@ const db = getFirestore(app);
 
 let currentUser=null;
 let currentRoom=null;
+let typingTimeout=null;
 
 const toggle=document.getElementById("wa-toggle");
 const sidebar=document.getElementById("wa-sidebar");
 const loginBtn=document.getElementById("wa-login");
 const usersDiv=document.getElementById("wa-users");
 const messagesDiv=document.getElementById("wa-messages");
-const sendBtn=document.getElementById("wa-send");
 const input=document.getElementById("wa-input");
+const sendBtn=document.getElementById("wa-send");
+const typingDiv=document.getElementById("wa-typing");
+const notif=document.getElementById("notif-sound");
 
 toggle.onclick=()=>sidebar.classList.toggle("open");
 
+// LOGIN
 loginBtn.onclick=()=>{
  const provider=new GoogleAuthProvider();
  signInWithPopup(auth,provider);
 };
 
-function privateRoom(id1,id2){return [id1,id2].sort().join("_")}
-
-// ONLINE USERS & PRESENCE
+// ONLINE USERS
 function loadUsers(){
  onSnapshot(collection(db,"onlineUsers"),snap=>{
    usersDiv.innerHTML="";
@@ -1018,9 +1027,9 @@ function loadUsers(){
      if(data.uid===currentUser.uid) return;
      const div=document.createElement("div");
      div.className="user-item";
-     div.innerText=data.name;
+     div.innerHTML=`<img src="${data.photoURL}"><span>${data.name}</span>`;
      div.onclick=()=>{
-       currentRoom=privateRoom(currentUser.uid,data.uid);
+       currentRoom=[currentUser.uid,data.uid].sort().join("_");
        loadMessages(currentRoom);
      };
      usersDiv.appendChild(div);
@@ -1037,8 +1046,10 @@ function loadMessages(room){
      const data=d.data();
      const div=document.createElement("div");
      div.className="msg "+(data.uid===currentUser.uid?"me":"other");
-     div.innerText=data.text;
+     const time=new Date(data.created?.seconds*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+     div.innerHTML=`${data.text}<div class="msg-time">${time}</div>`;
      messagesDiv.appendChild(div);
+     if(data.uid!==currentUser.uid) notif.play();
    });
    messagesDiv.scrollTop=messagesDiv.scrollHeight;
  });
@@ -1054,7 +1065,33 @@ sendBtn.onclick=async ()=>{
    created:serverTimestamp()
  });
  input.value="";
+ updateTyping(false);
 };
+
+// TYPING INDICATOR
+input.addEventListener("input",()=>{
+ updateTyping(true);
+ clearTimeout(typingTimeout);
+ typingTimeout=setTimeout(()=>updateTyping(false),1500);
+});
+
+async function updateTyping(isTyping){
+ if(!currentUser || !currentRoom) return;
+ const typingDoc=doc(db,"rooms",currentRoom,"typing",currentUser.uid);
+ if(isTyping) await setDoc(typingDoc,{uid:currentUser.uid,name:currentUser.displayName});
+ else await deleteDoc(typingDoc);
+}
+
+// SHOW TYPING
+function watchTyping(room){
+ onSnapshot(collection(db,"rooms",room,"typing"),snap=>{
+   let names=[];
+   snap.forEach(d=>{
+     if(d.id!==currentUser.uid) names.push(d.data().name);
+   });
+   typingDiv.innerText=names.length>0 ? `${names.join(", ")} is typing...` : "";
+ });
+}
 
 // LOGIN STATE
 onAuthStateChanged(auth,user=>{
@@ -1065,21 +1102,20 @@ onAuthStateChanged(auth,user=>{
    // SAVE ONLINE USER
    setDoc(doc(db,"onlineUsers",user.uid),{
      name:user.displayName,
-     uid:user.uid
+     uid:user.uid,
+     photoURL:user.photoURL
    });
 
-   // REMOVE FROM ONLINE ON LOGOUT/EXIT
-   window.addEventListener("beforeunload",()=>{
-     deleteDoc(doc(db,"onlineUsers",user.uid));
-   });
+   // REMOVE ON LOGOUT/CLOSE
+   window.addEventListener("beforeunload",()=>deleteDoc(doc(db,"onlineUsers",user.uid)));
 
    loadUsers();
  }
 });
 </script>
-
 </body>
 </html>
+
 
 
 
