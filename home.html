@@ -9,171 +9,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="icon" href="virtual-reality.png">
-    <!-- Add this inside your <head> -->
-<style>
-  :root {
-    --primary-color: #7b5cff;
-    --background: #1e1e2f;
-    --sidebar-width: 350px;
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  body {
-    font-family: var(--font-family);
-    margin: 0;
-    background: var(--background);
-    color: #eee;
-  }
-
-  /* Sidebar container */
-  #chatSidebar {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: var(--sidebar-width);
-    background: #2a2a3d;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.7);
-    display: flex;
-    flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 10000;
-  }
-  #chatSidebar.open {
-    transform: translateX(0);
-  }
-
-  /* Header */
-  #chatHeader {
-    background: var(--primary-color);
-    padding: 16px;
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #chatHeader button {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  /* Messages container */
-  #chatMessages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    background: #1e1e2f;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .message {
-    max-width: 75%;
-    padding: 12px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    line-height: 1.4;
-    word-wrap: break-word;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-  .message.me {
-    background: var(--primary-color);
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-  }
-  .message.friend {
-    background: #44475a;
-    color: #ddd;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-  }
-  .message .meta {
-    font-size: 10px;
-    opacity: 0.6;
-    margin-top: 4px;
-    text-align: right;
-  }
-
-  /* Input area */
-  #chatInputArea {
-    display: flex;
-    padding: 12px 16px;
-    background: #2a2a3d;
-    border-top: 1px solid #44475a;
-  }
-  #chatInput {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 30px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    background: #44475a;
-    color: white;
-    transition: background 0.3s ease;
-  }
-  #chatInput::placeholder {
-    color: #bbb;
-  }
-  #chatInput:focus {
-    background: #5a5aff;
-  }
-  #chatSendBtn {
-    margin-left: 12px;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 30px;
-    padding: 0 20px;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  #chatSendBtn:hover {
-    background: #5a5aff;
-  }
-
-  /* Toggle button */
-  #chatToggleBtn {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    background: var(--primary-color);
-    border: none;
-    color: white;
-    padding: 14px 22px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 16px;
-    box-shadow: 0 4px 12px rgba(123, 92, 255, 0.6);
-    z-index: 10001;
-    transition: background 0.3s ease;
-  }
-  #chatToggleBtn:hover {
-    background: #5a5aff;
-  }
-
-  /* Scrollbar styling */
-  #chatMessages::-webkit-scrollbar {
-    width: 8px;
-  }
-  #chatMessages::-webkit-scrollbar-track {
-    background: #1e1e2f;
-  }
-  #chatMessages::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-  }
-</style>
     <style>
 
 .user-wrapper{
@@ -1096,127 +931,198 @@ function addBotResponse(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 </script>
-<!-- Chat Sidebar HTML -->
-<div id="chatSidebar" aria-label="Chat sidebar" role="region" aria-hidden="true">
-  <div id="chatHeader">
-    Chat with Friends
-    <button id="chatCloseBtn" aria-label="Close chat sidebar">&times;</button>
+<!-- ===== ADVANCED REAL FRIEND SIDEBAR CHAT ===== -->
+
+<div id="chat-toggle">💬</div>
+
+<div id="chat-sidebar">
+  <div id="chat-header">
+    <span>Friends Chat</span>
+    <button id="login-btn">Login</button>
   </div>
-  <div id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
-  <form id="chatForm" autocomplete="off" aria-label="Send message form">
-    <div id="chatInputArea">
-      <input type="text" id="chatInput" placeholder="Type a message..." aria-label="Message input" required />
-      <button type="submit" id="chatSendBtn" aria-label="Send message">Send</button>
-    </div>
-  </form>
+
+  <div id="user-panel">
+    <div><strong>Online Users</strong></div>
+    <div id="users"></div>
+  </div>
+
+  <div id="chat-messages"></div>
+
+  <div id="chat-input-area">
+    <input type="text" id="chat-room" placeholder="Room (global or username)">
+    <input type="text" id="chat-input" placeholder="Type message...">
+    <button id="chat-send">Send</button>
+  </div>
 </div>
 
-<button id="chatToggleBtn" aria-label="Open chat sidebar">Chat</button>
+<audio id="notif-sound">
+  <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
+</audio>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+#chat-toggle{
+ position:fixed;bottom:20px;right:20px;
+ background:#6c2bd9;color:white;
+ padding:15px;border-radius:50%;
+ cursor:pointer;z-index:9999
+}
+#chat-sidebar{
+ position:fixed;top:0;right:-360px;
+ width:340px;height:100%;
+ background:#0f172a;color:white;
+ display:flex;flex-direction:column;
+ transition:.3s;font-family:Arial;z-index:9998
+}
+#chat-sidebar.open{right:0}
+#chat-header{
+ background:#6c2bd9;padding:10px;
+ display:flex;justify-content:space-between
+}
+#user-panel{
+ background:#111827;padding:8px;
+ max-height:120px;overflow-y:auto;
+ font-size:13px
+}
+#chat-messages{
+ flex:1;overflow-y:auto;padding:10px;
+ font-size:14px
+}
+.message{
+ margin:6px 0;padding:8px;
+ background:#1f2937;border-radius:8px
+}
+#chat-input-area{
+ padding:8px;background:#111827;
+ display:flex;flex-direction:column
+}
+#chat-input-area input{
+ margin:4px 0;padding:6px;
+ border:none;border-radius:6px
+}
+#chat-send{
+ background:#6c2bd9;border:none;
+ padding:8px;color:white;border-radius:6px
+}
+.user-item{
+ cursor:pointer;padding:3px 0
+}
+.user-item:hover{color:#6c2bd9}
+</style>
 
-<script>
-  (function(){
-    // Your Firebase configuration (replace with your own Firebase project config)
-    const firebaseConfig = {
-  apiKey: "AIzaSyAZgiiynxDqpmRTIi3egtREov-HuMg31FE",
-  authDomain: "side-bar-chat-app.firebaseapp.com",
-  projectId: "side-bar-chat-app",
-  storageBucket: "side-bar-chat-app.firebasestorage.app",
-  messagingSenderId: "358332042325",
-  appId: "1:358332042325:web:17e2abb7e99f6e841718dc",
-    };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, query, orderBy, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+/* ====== YOUR FIREBASE CONFIG ====== */
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
+};
+/* =================================== */
 
-    // Elements
-    const sidebar = document.getElementById('chatSidebar');
-    const toggleBtn = document.getElementById('chatToggleBtn');
-    const closeBtn = document.getElementById('chatCloseBtn');
-    const messagesEl = document.getElementById('chatMessages');
-    const form = document.getElementById('chatForm');
-    const input = document.getElementById('chatInput');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    // User identification (simple prompt for demo)
-    let username = localStorage.getItem('chat_username');
-    if(!username){
-      username = prompt('Enter your chat name:', 'Friend_' + Math.floor(Math.random()*1000));
-      if(!username) username = 'Anonymous';
-      localStorage.setItem('chat_username', username);
-    }
+const toggle = document.getElementById("chat-toggle");
+const sidebar = document.getElementById("chat-sidebar");
+const loginBtn = document.getElementById("login-btn");
+const usersDiv = document.getElementById("users");
+const messagesDiv = document.getElementById("chat-messages");
+const sendBtn = document.getElementById("chat-send");
+const notif = document.getElementById("notif-sound");
 
-    // Open/close sidebar
-    function openSidebar() {
-      sidebar.classList.add('open');
-      sidebar.setAttribute('aria-hidden', 'false');
-      input.focus();
-    }
-    function closeSidebar() {
-      sidebar.classList.remove('open');
-      sidebar.setAttribute('aria-hidden', 'true');
-    }
-    toggleBtn.addEventListener('click', openSidebar);
-    closeBtn.addEventListener('click', closeSidebar);
+let currentUser = null;
+let currentRoom = "global";
 
-    // Add message to chat UI
-    function addMessage(data) {
-      const msg = document.createElement('div');
-      msg.classList.add('message');
-      msg.classList.add(data.username === username ? 'me' : 'friend');
-      msg.innerHTML = `
-        <div>${escapeHtml(data.text)}</div>
-        <div class="meta">${escapeHtml(data.username)} • ${new Date(data.timestamp?.toDate ? data.timestamp.toDate() : data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-      `;
-      messagesEl.appendChild(msg);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+toggle.onclick = () => sidebar.classList.toggle("open");
 
-    // Escape HTML to prevent XSS
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+loginBtn.onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
+};
 
-    // Listen for new messages in Firestore in real-time
-    db.collection('chat_messages')
-      .orderBy('timestamp')
-      .limit(100)
-      .onSnapshot(snapshot => {
-        messagesEl.innerHTML = '';
-        snapshot.forEach(doc => {
-          addMessage(doc.data());
-        });
-      });
-
-    // Send message
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if(!text) return;
-      input.value = '';
-      try {
-        await db.collection('chat_messages').add({
-          text,
-          username,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (err) {
-        alert('Error sending message: ' + err.message);
-      }
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    currentUser = user;
+    loginBtn.innerText = user.displayName;
+    await setDoc(doc(db,"onlineUsers",user.uid),{
+      name:user.displayName,
+      uid:user.uid
     });
+    loadUsers();
+    loadRoom("global");
+  }
+});
 
-    // Optional: open chat if URL hash is #chat
-    if(location.hash === '#chat') openSidebar();
-  })();
+function loadUsers(){
+  onSnapshot(collection(db,"onlineUsers"),(snap)=>{
+    usersDiv.innerHTML="";
+    snap.forEach(doc=>{
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.classList.add("user-item");
+      div.innerText=data.name;
+      div.onclick=()=>{
+        currentRoom = privateRoomId(currentUser.uid,data.uid);
+        document.getElementById("chat-room").value=data.name;
+        loadRoom(currentRoom);
+      };
+      usersDiv.appendChild(div);
+    });
+  });
+}
+
+function privateRoomId(uid1,uid2){
+  return [uid1,uid2].sort().join("_");
+}
+
+sendBtn.onclick = async ()=>{
+  const text = document.getElementById("chat-input").value;
+  const roomInput = document.getElementById("chat-room").value;
+
+  if(roomInput && roomInput==="global") currentRoom="global";
+
+  if(!text || !currentUser) return;
+
+  await addDoc(collection(db,"rooms",currentRoom,"messages"),{
+    name:currentUser.displayName,
+    text,
+    created:serverTimestamp()
+  });
+
+  document.getElementById("chat-input").value="";
+};
+
+function loadRoom(room){
+  const q = query(collection(db,"rooms",room,"messages"),orderBy("created"));
+  onSnapshot(q,(snap)=>{
+    messagesDiv.innerHTML="";
+    snap.forEach(doc=>{
+      const data=doc.data();
+      const div=document.createElement("div");
+      div.classList.add("message");
+      div.innerHTML=`<strong>${data.name}:</strong> ${data.text}`;
+      messagesDiv.appendChild(div);
+      notif.play();
+    });
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
+}
 </script>
+
+<!-- ===== END CHAT ===== --> 
 
 </body>
 </html>
+
 
 
 
