@@ -1468,15 +1468,6 @@ function addBotResponse(text) {
 </aside>
 
 <script>
-      // Paste your AI API endpoint URL here (replace with your actual endpoint)
-  window.NEON_AI_ENDPOINT = "https://platform.openai.com/settings/proj_qygupj4sMQzGETsX3QBQZElK/api-keys;"
-
-  // Optional: provide context about your game/site to the AI
-  window.NEON_AI_CONTEXT = {
-    game: "Ai",
-    vibe: "competitive",
-    features: ["builds", "patch notes", "guides"]
-  };
   const aiFab = document.getElementById('aiFab');
   const aiSidebar = document.getElementById('aiSidebar');
   const aiOverlay = document.getElementById('aiOverlay');
@@ -1487,7 +1478,14 @@ function addBotResponse(text) {
   const aiSend = document.getElementById('aiSend');
   const aiModeText = document.getElementById('aiModeText');
   const aiConnText = document.getElementById('aiConnText');
+const aiApiKeyInput = document.getElementById('aiApiKey');
+let aiApiKey = "";
 
+// Save API key when user types (optionally you can use localStorage)
+aiApiKeyInput.addEventListener('input', (e) => {
+  aiApiKey = e.target.value.trim();
+  console.log("API Key set:", aiApiKey ? "[HIDDEN]" : "none"); // for debug only
+});
   function openAI(){
     aiSidebar.dataset.open = "true";
     aiOverlay.dataset.open = "true";
@@ -1585,10 +1583,10 @@ function addBotResponse(text) {
     }
   });
 </script>
-
 </body>
 </body>
 </html>
+
 
 
 
